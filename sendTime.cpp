@@ -1,7 +1,6 @@
 #include <ctime>
 #include <iostream>
 #include <stdio.h>
-#include "sendTime.h"
 
 using namespace std;
 
@@ -25,4 +24,9 @@ void sendTime() {
   }
 
   fclose(file);
+}
+
+int main(){
+  sendTime();
+  return 0;
 }
