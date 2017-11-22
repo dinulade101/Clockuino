@@ -2,7 +2,7 @@
 #include <SPI.h>
 #include <SD.h>
 #include <Adafruit_ILI9341.h>
-#include "sendTime.h"
+
 
 // initiate time array, to be filled in the format hhmmss
 int time[6] = {0};
@@ -32,7 +32,6 @@ void loop(){
 
 int main(){
 	setup();
-	sendTime();
 	loop();
 
 	for (int i = 0; i < 6; i++){
