@@ -63,12 +63,10 @@ void initializeFour7SegDisplays(){
 }
 
 void setTimeToDisplay(){
-	for (int i=0; i<2; i++){
-		setNumOf7SegDisplay(time[i], i, 0);
-	}
-	for (int i=2; i<4; i++){
-		setNumOf7SegDisplay(time[i], i, SPACING_BETWEEN_DIGITS*2);
-	}
+	hoursDig1 = time[0];
+	hoursDig2 = time[1];
+	minDig1 = time[2];
+	minDig2 = time[3];
 }
 
 void downloadTimeFromComputer(){
