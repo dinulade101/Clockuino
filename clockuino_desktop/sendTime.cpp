@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 using namespace std;
-
+int timer = 0;
 
 void sendTime() {
 
@@ -27,6 +27,12 @@ void sendTime() {
 }
 
 int main(){
-  sendTime();
+  while (true){
+    if (timer==1000){
+      sendTime();
+      timer=0;
+    }
+    timer++;
+  }
   return 0;
 }
