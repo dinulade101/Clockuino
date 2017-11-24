@@ -13,4 +13,6 @@ build-mega2560/mainClockScreen.o: mainClockScreen.cpp \
  /usr/share/arduino/hardware/arduino//cores/arduino/Print.h \
  /usr/share/arduino/libraries/SPI/SPI.h \
  /home/cmput274/arduino-ua/libraries/Adafruit_GFX/Adafruit_GFX.h \
- /home/cmput274/arduino-ua/libraries/Adafruit_GFX/gfxfont.h
+ /home/cmput274/arduino-ua/libraries/Adafruit_GFX/gfxfont.h \
+ /home/cmput274/arduino-ua/libraries/TouchScreen/TouchScreen.h \
+ createAlarm.h
