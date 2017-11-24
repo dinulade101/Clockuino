@@ -6,7 +6,6 @@ using namespace std;
 int timer = 0;
 
 void sendTime() {
-
   FILE *file;
   file = fopen("/dev/ttyACM0", "w");  //Opening device file
 
@@ -27,6 +26,7 @@ void sendTime() {
 }
 
 int main(){
+<<<<<<< HEAD
   //while (true){
     //if (timer==1000){
       sendTime();
@@ -34,5 +34,8 @@ int main(){
   //  }
     //timer++;
   //}
+=======
+  sendTime();
+>>>>>>> 9e678e583a4d928eb01ead6eb860510cbb304d2a
   return 0;
 }
