@@ -67,6 +67,11 @@ void setTimeToDisplay(){
 	hoursDig2 = time[1];
 	minDig1 = time[2];
 	minDig2 = time[3];
+	setNumOf7SegDisplay(hoursDig1, 0, 0);
+	setNumOf7SegDisplay(hoursDig2, 1, 0);
+	setNumOf7SegDisplay(minDig1, 2, SPACING_BETWEEN_DIGITS*2);
+	setNumOf7SegDisplay(minDig2, 3, SPACING_BETWEEN_DIGITS*2);
+
 }
 
 void downloadTimeFromComputer(){
@@ -154,14 +159,14 @@ int main(){
 		read=0;
 		serialReadCounter = 0;
 		loopCounter++;
-		if (loopCounter == 1){
+		if (millis()%60000 == 0){
 			loopCounter = 0;
 			advanceClock();
 		}
 		//delay(50);
 		// //Serial.println(digitalRead(RESET_TIME_PIN));
 
-		//delay(1000);
+		//delay(100);
 	}
 
 

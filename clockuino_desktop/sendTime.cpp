@@ -27,12 +27,12 @@ void sendTime() {
 }
 
 int main(){
-  while (true){
-    if (timer==1000){
+  //while (true){
+    //if (timer==1000){
       sendTime();
-      timer=0;
-    }
-    timer++;
-  }
+    //  timer=0;
+  //  }
+    //timer++;
+  //}
   return 0;
 }
