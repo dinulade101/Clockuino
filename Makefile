@@ -14,7 +14,7 @@ endif
 
 # Arduino Included Libraries
 ifndef ARDUINO_LIBS
-ARDUINO_LIBS = SD SPI Adafruit_GFX Adafruit_ILI9341 TouchScreen
+ARDUINO_LIBS = SD SPI Adafruit_GFX Adafruit_ILI9341 TouchScreen EEPROM
 endif
 
 # User Installed Library Location
