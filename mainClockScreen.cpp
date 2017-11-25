@@ -171,8 +171,8 @@ int main(){
 	 for (int i=0; i<4; i++){
 		 alarm.alarmTime[i] = 5;
 	 }
-	 saveAlarm(1, alarm);
-	 EEPROM.get(0, alarm);
+	 //saveAlarm(1, alarm);
+	 //EEPROM.get(0, alarm);
 	 for (int i=0; i<4; i++){
 		 Serial.println(alarm.alarmTime[i]);
 	 }
@@ -186,7 +186,7 @@ int main(){
 		read=0;
 		serialReadCounter = 0;
 		loopCounter++;
-		if (millis()%60 == 0){
+		if (millis()%60000 == 0){
 			loopCounter = 0;
 			advanceClock();
 		}
