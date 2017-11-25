@@ -1,4 +1,4 @@
-#include <Arduino.h>
+a#include <Arduino.h>
 #include <Adafruit_ILI9341.h>
 #include <TouchScreen.h>
 #include "createAlarm.h"
@@ -19,6 +19,12 @@ int hoursDig1 = 0, hoursDig2 = 0, minDig1 = 0, minDig2 = 0, loopCounter=0;
 // thresholds to determine if there was a touch
 #define MINPRESSURE   10
 #define MAXPRESSURE 1000
+// calibration data for the touch screen, obtained from documentation
+// the minimum/maximum possible readings from the touch point
+#define TS_MINX 150
+#define TS_MINY 120
+#define TS_MAXX 920
+#define TS_MAXY 940
 // touch screen pins, obtained from the documentaion
 #define YP A2  // must be an analog pin, use "An" notation!
 #define XM A3  // must be an analog pin, use "An" notation!
@@ -38,6 +44,8 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 // so initialize with this to get more accurate readings
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
+int makeAlarm = 0;
+
 void setup(){
 	init();
 	Serial.begin(9600);
@@ -45,6 +53,7 @@ void setup(){
 	//set RESET_TIME_PIN to input and turn on internal pull up resistor
 	pinMode(RESET_TIME_PIN, INPUT);
 	digitalWrite(RESET_TIME_PIN, HIGH);
+	tft.begin();
 }
 void drawButton(){
 	tft.drawRect(TFT_WIDTH/2 - BUTTON_WIDTH, TFT_HEIGHT/2 - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, ILI9341_WHITE);
@@ -154,11 +163,16 @@ void advanceClock(){
 
 int main(){
 	setup();
+<<<<<<< HEAD
 	//
+=======
+
+>>>>>>> fce022265414fa1f1cc439e2c57589e339874cf4
 	 tft.begin();
 	 tft.fillScreen(ILI9341_BLACK);
 	 tft.setRotation(3);
 	 initializeFour7SegDisplays();
+<<<<<<< HEAD
 	 Alarm alarm;
 	 for (int i=0; i<4; i++){
 		 alarm.alarmTime[i] = 5;
@@ -198,6 +212,33 @@ int main(){
 	}
 	setTimeToDisplay();
 	initializeFour7SegDisplays();
+=======
+	// while (true){
+	// 	//setColon();
+	// 	 	if (digitalRead(RESET_TIME_PIN)==LOW){
+	// 	 	Serial.println("reset pin");
+	// 	 	downloadTimeFromComputer();
+	// 	 	while (digitalRead(RESET_TIME_PIN)==LOW){Serial.println("stuck in loop");};
+	// 	}
+	// 	read=0;
+	// 	serialReadCounter = 0;
+	// 	loopCounter++;
+	// 	if (millis()%60000 == 0){
+	// 		loopCounter = 0;
+	// 		advanceClock();
+	// 	}
+	// 	//delay(50);
+	// 	// //Serial.println(digitalRead(RESET_TIME_PIN));
+  //
+	// 	//delay(100);
+	// }
+  //
+	// for (int i = 0; i < 6; i++){
+	// 	Serial.print(time[i]);
+	// }
+	// setTimeToDisplay();
+	// initializeFour7SegDisplays();
+>>>>>>> fce022265414fa1f1cc439e2c57589e339874cf4
 	//drawButton();
 	// while (true){
 	// 	read=0;
@@ -206,6 +247,19 @@ int main(){
 	// 	if (loopCounter == 60){
 	// 		loopCounter = 0;
 	// 		advanceClock();
+	// 	}
+	// }
+
+
+
+
+	// AHMED'S CODE
+	// while (true){
+	// 	if (makeAlarm = 0){
+	// 		// whatever displays clock
+	// 	}
+	// 	else{
+	// 		createAlarm();
 	// 	}
 	// }
 
