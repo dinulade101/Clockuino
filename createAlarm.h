@@ -1,8 +1,16 @@
-#include "alarm.h"
+#ifndef _CREATE_ALARM_H_
+#define _CREATE_ALARM_H_
 
-#ifndef _create_alarm_h
-#define _create_alarm_h
+#include <Arduino.h>
+#include <EEPROM.h>
+#include "createAlarm.h"
 
+class Alarm{
+	public:
+	uint8_t alarmTime[3];
+};
+
+int createNewAlarm();
 void saveAlarm(int eeAddress, Alarm alarmObj);
 
 #endif
