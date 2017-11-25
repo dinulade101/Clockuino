@@ -2,6 +2,8 @@
 #include <Adafruit_ILI9341.h>
 #include <TouchScreen.h>
 #include "createAlarm.h"
+#include "alarm.h"
+#include <EEPROM.h>
 // initiate time array, to be filled in the format hhmmss
 int time[6] = {0};
 // i and read are used to make sure we read all 6 digits of time.
@@ -72,8 +74,11 @@ void setNumOf7SegDisplay(int digitVal, int digitLoc, int cursorStart){
 }
 
 void initializeFour7SegDisplays(){
-		for (int i = 0; i < 4; i++){
+		for (int i = 0; i < 2; i++){
 			setNumOf7SegDisplay(time[i], i, 0);
+		}
+		for (int i = 2; i < 4; i++){
+			setNumOf7SegDisplay(time[i], i, SPACING_BETWEEN_DIGITS*2);
 		}
 }
 
@@ -101,6 +106,7 @@ void downloadTimeFromComputer(){
     }
     if (serialReadCounter == 6){
 			read = 1;
+			setTimeToDisplay();
 		}
   }
 }
@@ -148,12 +154,21 @@ void advanceClock(){
 
 int main(){
 	setup();
-<<<<<<< HEAD
 	//
 	 tft.begin();
 	 tft.fillScreen(ILI9341_BLACK);
 	 tft.setRotation(3);
 	 initializeFour7SegDisplays();
+	 Alarm alarm;
+	 for (int i=0; i<4; i++){
+		 alarm.alarmTime[i] = 5;
+	 }
+	 saveAlarm(1, alarm);
+	 EEPROM.get(0, alarm);
+	 for (int i=0; i<4; i++){
+		 Serial.println(alarm.alarmTime[i]);
+	 }
+
 	while (true){
 		//setColon();
 		 	if (digitalRead(RESET_TIME_PIN)==LOW){
@@ -164,7 +179,7 @@ int main(){
 		read=0;
 		serialReadCounter = 0;
 		loopCounter++;
-		if (millis()%60000 == 0){
+		if (millis()%60 == 0){
 			loopCounter = 0;
 			advanceClock();
 		}
@@ -174,13 +189,10 @@ int main(){
 		//delay(100);
 	}
 
-
-=======
 	tft.begin();
 	tft.fillScreen(ILI9341_BLACK);
 	tft.setRotation(3);
 	downloadTimeFromComputer();
->>>>>>> 9e678e583a4d928eb01ead6eb860510cbb304d2a
 	for (int i = 0; i < 6; i++){
 		Serial.print(time[i]);
 	}
