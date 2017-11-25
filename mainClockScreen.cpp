@@ -1,9 +1,9 @@
-a#include <Arduino.h>
+#include <Arduino.h>
 #include <Adafruit_ILI9341.h>
 #include <TouchScreen.h>
-#include "createAlarm.h"
-#include "alarm.h"
 #include <EEPROM.h>
+#include "createAlarm.h"
+
 // initiate time array, to be filled in the format hhmmss
 int time[6] = {0};
 // i and read are used to make sure we read all 6 digits of time.
@@ -192,7 +192,7 @@ int main(){
 		}
 	}
 
-  // 
+  //
 	// while (true){
 	// 	if (makeAlarm = 0){
 	// 		// whatever displays clock
