@@ -33,8 +33,8 @@ int hoursDig1 = 0, hoursDig2 = 0, minDig1 = 0, minDig2 = 0, loopCounter=0;
 // width/height of the display when rotated horizontally
 #define TFT_WIDTH 320
 #define TFT_HEIGHT 240
-#define BUTTON_WIDTH 150
-#define BUTTON_HEIGHT 50
+#define BUTTON_WIDTH 215
+#define BUTTON_HEIGHT 30
 #define FONTSIZE 11
 #define DIGIT_WIDTH 5*FONTSIZE
 #define SPACING_BETWEEN_DIGITS 15
@@ -45,7 +45,7 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 int makeAlarm = 0;
-
+int timeReceived = hoursDig1 | hoursDig2 | minDig1 | minDig2;
 void setup(){
 	init();
 	Serial.begin(9600);
@@ -56,10 +56,18 @@ void setup(){
 	tft.begin();
 }
 void drawButton(){
-	tft.drawRect(TFT_WIDTH/2 - BUTTON_WIDTH, TFT_HEIGHT/2 - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, ILI9341_WHITE);
-	tft.setTextColor(ILI9341_WHITE);
-	tft.setTextSize(2);
-	//tft.println("Create Alarm");
+	tft.fillRect(TFT_WIDTH/2 - BUTTON_WIDTH/2, TFT_HEIGHT - BUTTON_HEIGHT - 20, BUTTON_WIDTH, BUTTON_HEIGHT, ILI9341_WHITE);
+	tft.setTextSize(3);
+	tft.setTextColor(ILI9341_BLACK);
+	tft.setCursor(TFT_WIDTH/2 - BUTTON_WIDTH/2, TFT_HEIGHT - BUTTON_HEIGHT - 18);
+	tft.println("Create Alarm");
+}
+void buttonClick(){
+	TSPoint touch = ts.getPoint();
+	if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE) {return;}
+	int touchY = map(touch.x, TS_MINX, TS_MAXX, 0, TFT_HEIGHT - 1);
+	int touchX = map(touch.y, TS_MINY, TS_MAXY, TFT_WIDTH - 1, 0);
+
 }
 void setColon(){
 	tft.setCursor(120, 15);
@@ -163,28 +171,25 @@ void advanceClock(){
 
 int main(){
 	setup();
-	 tft.begin();
-	 tft.fillScreen(ILI9341_BLACK);
-	 tft.setRotation(3);
-	 initializeFour7SegDisplays();
-	 Alarm alarm;
-	 for (int i=0; i<4; i++){
-		 alarm.alarmTime[i] = 5;
-	 }
-	 //saveAlarm(1, alarm);
-	 //EEPROM.get(0, alarm);
-	 for (int i=0; i<4; i++){
-		 Serial.println(alarm.alarmTime[i]);
-	 }
+	tft.begin();
+	tft.fillScreen(ILI9341_BLACK);
+	tft.setRotation(3);
+	initializeFour7SegDisplays();
+	drawButton();
+	Alarm alarm;
+	for (int i=0; i<4; i++){
+		alarm.alarmTime[i] = 5;
+	}
+	//saveAlarm(1, alarm);
+	//EEPROM.get(0, alarm);
+	// for (int i=0; i<4; i++){
+	// 	Serial.println(alarm.alarmTime[i]);
+	// }
 
-	while (true){
-		 	if (digitalRead(RESET_TIME_PIN)==LOW){
-		 	Serial.println("reset pin");
-		 	downloadTimeFromComputer();
-		 	while (digitalRead(RESET_TIME_PIN)==LOW){Serial.println("stuck in loop");};
+	while (!timeReceived){
+		if (digitalRead(RESET_TIME_PIN)==LOW){
+			downloadTimeFromComputer();
 		}
-		read=0;
-		serialReadCounter = 0;
 		loopCounter++;
 		if (millis()%60000 == 0){
 			loopCounter = 0;
