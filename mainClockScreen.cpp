@@ -9,7 +9,8 @@ int time[6] = {0};
 // i and read are used to make sure we read all 6 digits of time.
 int serialReadCounter = 0;
 bool read = 0, colonState = 0;
-int hoursDig1 = 0, hoursDig2 = 0, minDig1 = 0, minDig2 = 0, loopCounter=0;
+int hoursDig1 = 0, hoursDig2 = 0, minDig1 = 0, minDig2 = 0;
+bool makeAlarm = 0;
 
 #define RESET_TIME_PIN 11
 #define BUZZER 12
@@ -44,8 +45,6 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 // so initialize with this to get more accurate readings
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
-int makeAlarm = 0;
-int timeReceived = hoursDig1 | hoursDig2 | minDig1 | minDig2;
 void setup(){
 	init();
 	Serial.begin(9600);
@@ -67,7 +66,9 @@ void buttonClick(){
 	if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE) {return;}
 	int touchY = map(touch.x, TS_MINX, TS_MAXX, 0, TFT_HEIGHT - 1);
 	int touchX = map(touch.y, TS_MINY, TS_MAXY, TFT_WIDTH - 1, 0);
-
+	bool inRange = touchX > TFT_WIDTH/2 - BUTTON_WIDTH/2 && touchX< TFT_WIDTH/2 - BUTTON_WIDTH/2 + BUTTON_WIDTH;
+	inRange = inRange && (touchY > TFT_HEIGHT - BUTTON_HEIGHT - 20) && (touchY<TFT_HEIGHT - BUTTON_HEIGHT - 20+BUTTON_HEIGHT);
+	if (inRange){makeAlarm = 1;}
 }
 void setColon(){
 	tft.setCursor(120, 15);
@@ -81,6 +82,25 @@ void setColon(){
 		tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
 	}
 	tft.print(":");
+}
+void createNewAlarm(){
+	tft.fillScreen(ILI9341_BLACK);
+	tft.fillRect(115, 90, 100, 40, ILI9341_WHITE);
+	tft.setTextSize(4);
+	tft.setTextColor(ILI9341_BLACK);
+	tft.setCursor(117, 92);
+	tft.println("Hour");
+	tft.fillTriangle(80, 90, 110, 90, 95, 120,ILI9341_WHITE);
+	tft.fillTriangle(225, 120, 255, 120, 240, 90,ILI9341_WHITE);
+
+	tft.fillRect(105, 145, 140, 35, ILI9341_WHITE);
+	tft.setTextSize(4);
+	tft.setTextColor(ILI9341_BLACK);
+	tft.setCursor(107, 147);
+	tft.println("Minutes");
+	tft.fillTriangle(60, 180, 90, 180, 75, 145,ILI9341_WHITE);
+	tft.fillTriangle(255, 145, 285, 145, 270, 180,ILI9341_WHITE);
+
 }
 
 void setNumOf7SegDisplay(int digitVal, int digitLoc, int cursorStart){
@@ -168,7 +188,7 @@ void advanceClock(){
 		setNumOf7SegDisplay(hoursDig2, 1, 0);
 	}
 }
-
+void clockMode(){}
 int main(){
 	setup();
 	tft.begin();
@@ -176,36 +196,34 @@ int main(){
 	tft.setRotation(3);
 	initializeFour7SegDisplays();
 	drawButton();
-	Alarm alarm;
-	for (int i=0; i<4; i++){
-		alarm.alarmTime[i] = 5;
-	}
+	// initializeFour7SegDisplays();
+	// drawButton();
+	//Alarm alarm;
+	// for (int i=0; i<4; i++){
+	// 	alarm.alarmTime[i] = 5;
+	// }
 	//saveAlarm(1, alarm);
 	//EEPROM.get(0, alarm);
 	// for (int i=0; i<4; i++){
 	// 	Serial.println(alarm.alarmTime[i]);
 	// }
 
-	while (!timeReceived){
+	while (!read){
 		if (digitalRead(RESET_TIME_PIN)==LOW){
 			downloadTimeFromComputer();
-		}
-		loopCounter++;
-		if (millis()%60000 == 0){
-			loopCounter = 0;
-			advanceClock();
+			read = 1;
 		}
 	}
 
-  //
-	// while (true){
-	// 	if (makeAlarm = 0){
-	// 		// whatever displays clock
-	// 	}
-	// 	else{
-	// 		createAlarm();
-	// 	}
-	// }
+	while (true){
+		if (millis()%60000 == 0){
+			advanceClock();
+		}
+		buttonClick();
+		if (makeAlarm == 1){
+			createNewAlarm();
+		}
+	}
 
 	Serial.end();
 	return 0;

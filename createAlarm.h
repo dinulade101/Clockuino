@@ -9,8 +9,6 @@ class Alarm{
 	public:
 	uint8_t alarmTime[3];
 };
-
-void createNewAlarm();
 void saveAlarm(int eeAddress, Alarm alarmObj);
 
 #endif
