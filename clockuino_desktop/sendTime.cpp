@@ -16,7 +16,7 @@ void sendTime() {
     if (ctime(&rawtime)[i] != ':'){
       //time in format hhmmss
       int x = ctime(&rawtime)[i] - 48;
-      cout<< x<< " ";
+      //cout<< x<< " ";
       fprintf(file, "%d", x);
       fprintf(file, "%c",',');
     }
