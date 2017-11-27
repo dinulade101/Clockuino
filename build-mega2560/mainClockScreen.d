@@ -15,4 +15,4 @@ build-mega2560/mainClockScreen.o: mainClockScreen.cpp \
  /home/cmput274/arduino-ua/libraries/Adafruit_GFX/Adafruit_GFX.h \
  /home/cmput274/arduino-ua/libraries/Adafruit_GFX/gfxfont.h \
  /home/cmput274/arduino-ua/libraries/TouchScreen/TouchScreen.h \
- /home/cmput274/arduino-ua/libraries/EEPROM/EEPROM.h createAlarm.h
+ /home/cmput274/arduino-ua/libraries/EEPROM/EEPROM.h alarm.h
