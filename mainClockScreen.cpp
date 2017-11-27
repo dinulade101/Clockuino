@@ -2,15 +2,17 @@
 #include <Adafruit_ILI9341.h>
 #include <TouchScreen.h>
 #include <EEPROM.h>
-#include "createAlarm.h"
+#include "alarm.h"
 
 // initiate time array, to be filled in the format hhmmss
 int time[6] = {0};
+int alarmTime[4] = {0};
 // i and read are used to make sure we read all 6 digits of time.
 int serialReadCounter = 0;
 bool read = 0, colonState = 0;
 int hoursDig1 = 0, hoursDig2 = 0, minDig1 = 0, minDig2 = 0;
 bool makeAlarm = 0;
+bool newAlarmCreated = 0;
 
 #define RESET_TIME_PIN 11
 #define BUZZER 12
@@ -45,6 +47,9 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 // so initialize with this to get more accurate readings
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
+void drawButton();
+void initializeFour7SegDisplays();
+
 void setup(){
 	init();
 	Serial.begin(9600);
@@ -52,8 +57,73 @@ void setup(){
 	//set RESET_TIME_PIN to input and turn on internal pull up resistor
 	pinMode(RESET_TIME_PIN, INPUT);
 	digitalWrite(RESET_TIME_PIN, HIGH);
+	pinMode(BUZZER, OUTPUT);
 	tft.begin();
 }
+
+void setNumOf7SegDisplay(int digitVal, int digitLoc, int cursorStart){
+	tft.setCursor((digitLoc*(DIGIT_WIDTH+SPACING_BETWEEN_DIGITS)+cursorStart), 15);
+	tft.setTextSize(FONTSIZE);
+	tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+	tft.print(digitVal);
+}
+
+void createNewAlarm(){
+	tft.fillScreen(ILI9341_BLACK);
+	tft.fillRect(115, 113, 100, 40, ILI9341_WHITE);
+	tft.setTextSize(4);
+	tft.setTextColor(ILI9341_BLACK);
+	tft.setCursor(117, 115);
+	tft.println("Hour");
+	tft.fillTriangle(80, 113, 110, 113, 95, 143,ILI9341_WHITE);
+	tft.fillTriangle(225, 143, 255, 143, 240, 113,ILI9341_WHITE);
+
+	tft.fillRect(105, 168, 140, 35, ILI9341_WHITE);
+	tft.setTextSize(4);
+	tft.setTextColor(ILI9341_BLACK);
+	tft.setCursor(107, 170);
+	tft.println("Minutes");
+	tft.fillTriangle(60, 168, 90, 168, 75, 203,ILI9341_WHITE);
+	tft.fillTriangle(255, 203, 285, 203, 270, 168,ILI9341_WHITE);
+
+	//tft.fillRect(105, 168, 140, 35, ILI9341_WHITE);
+	tft.setTextSize(3);
+	tft.setTextColor(ILI9341_BLACK, ILI9341_WHITE);
+	tft.setCursor(70, 220);
+	tft.println("Save Alarm");
+
+	//tft.fillTriangle(60, 203, 90, 203, 75, 168,ILI9341_WHITE);
+	//tft.fillTriangle(255, 168, 285, 168, 270, 203,ILI9341_WHITE);
+
+	//draw digits
+	for (int i = 0; i < 2; i++){
+		setNumOf7SegDisplay(0, i, 0);
+	}
+	for (int i = 2; i < 4; i++){
+		setNumOf7SegDisplay(0, i, SPACING_BETWEEN_DIGITS*2);
+	}
+
+}
+
+void reloadMainScreen(){
+	makeAlarm = 0;
+	tft.fillScreen(ILI9341_BLACK);
+	initializeFour7SegDisplays();
+	drawButton();
+}
+
+void saveAlarm(){
+	Alarm alarm;
+	for (int i=0; i<4; i++){
+		alarm.alarmTime[i] = alarmTime[i];
+	}
+	int nextAlarmAddress = getNextAlarmAddress();
+	saveAlarm(nextAlarmAddress, alarm);
+	saveNextAlarmAddress(nextAlarmAddress+1);
+	reloadMainScreen();
+	Serial.println("save alarm called");
+}
+
 void drawButton(){
 	tft.fillRect(TFT_WIDTH/2 - BUTTON_WIDTH/2, TFT_HEIGHT - BUTTON_HEIGHT - 20, BUTTON_WIDTH, BUTTON_HEIGHT, ILI9341_WHITE);
 	tft.setTextSize(3);
@@ -64,11 +134,106 @@ void drawButton(){
 void buttonClick(){
 	TSPoint touch = ts.getPoint();
 	if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE) {return;}
+	// get the y coordinate of where the display was touched
+	// remember the x-coordinate of touch is really our y-coordinate
+	// on the display
 	int touchY = map(touch.x, TS_MINX, TS_MAXX, 0, TFT_HEIGHT - 1);
-	int touchX = map(touch.y, TS_MINY, TS_MAXY, TFT_WIDTH - 1, 0);
-	bool inRange = touchX > TFT_WIDTH/2 - BUTTON_WIDTH/2 && touchX< TFT_WIDTH/2 - BUTTON_WIDTH/2 + BUTTON_WIDTH;
-	inRange = inRange && (touchY > TFT_HEIGHT - BUTTON_HEIGHT - 20) && (touchY<TFT_HEIGHT - BUTTON_HEIGHT - 20+BUTTON_HEIGHT);
-	if (inRange){makeAlarm = 1;}
+
+	// need to invert the x-axis, so reverse the
+	// range of the display coordinates
+	int touchX = map(touch.y, TS_MINY, TS_MAXY, TFT_WIDTH - 1, 0) - 20;
+	Serial.print("touch X");
+	Serial.println(touchX);
+	Serial.print("touch Y");
+	Serial.println(touchY);
+	if (!makeAlarm){
+		bool inRangeCreateAlarmButton = touchX > TFT_WIDTH/2 - BUTTON_WIDTH/2 && touchX< TFT_WIDTH/2 - BUTTON_WIDTH/2 + BUTTON_WIDTH;
+		inRangeCreateAlarmButton = inRangeCreateAlarmButton && (touchY > TFT_HEIGHT - BUTTON_HEIGHT - 20) && (touchY<TFT_HEIGHT - BUTTON_HEIGHT - 20+BUTTON_HEIGHT);
+		if (inRangeCreateAlarmButton)
+		{
+			makeAlarm = 1;
+			createNewAlarm();
+		}
+	}
+	else if (makeAlarm){
+		if (touchY>= 113 && touchY<= 143){
+			if (touchX >= 80 && touchX <= 110){
+				//down triangle for hours
+				alarmTime[1]--;
+				if (alarmTime[1]<0){
+					alarmTime[0]--;
+					alarmTime[1]=9;
+					if (alarmTime[0]<0){
+						alarmTime[1]=4;
+						alarmTime[0]=2;
+					}
+					setNumOf7SegDisplay(alarmTime[0], 0, 0);
+				}
+				setNumOf7SegDisplay(alarmTime[1], 1, 0);
+				newAlarmCreated = 0;
+
+			}
+			else if (touchX >= 225 && touchX <= 255){
+				//up triangle for hours
+				alarmTime[1]++;
+				if (alarmTime[1]>9){
+					alarmTime[0]++;
+					alarmTime[1]=0;
+					setNumOf7SegDisplay(alarmTime[0], 0, 0);
+				}
+				else if (alarmTime[0]>1 && alarmTime[1]>4){
+					alarmTime[1]=0;
+					alarmTime[0]=0;
+					setNumOf7SegDisplay(alarmTime[0], 0, 0);
+				}
+				setNumOf7SegDisplay(alarmTime[1], 1, 0);
+				newAlarmCreated = 0;
+			}
+		}
+
+		else if (touchY>= 168 && touchY<= 203){
+			if (touchX >= 60 && touchX <= 90){
+				//down triangle for minutes
+				alarmTime[3]--;
+				if (alarmTime[3]<0){
+					alarmTime[2]--;
+					alarmTime[3]=9;
+					if (alarmTime[2]<0){
+						alarmTime[3]=9;
+						alarmTime[2]=5;
+					}
+					setNumOf7SegDisplay(alarmTime[2], 2, SPACING_BETWEEN_DIGITS*2);
+				}
+				setNumOf7SegDisplay(alarmTime[3], 3, SPACING_BETWEEN_DIGITS*2);
+				newAlarmCreated = 0;
+
+			}
+			else if (touchX >= 255 && touchX <= 285){
+				//up triangle for minutes
+				alarmTime[3]++;
+				if (alarmTime[3]>9){
+					alarmTime[2]++;
+					alarmTime[3]=0;
+					if (alarmTime[2]>5){
+						alarmTime[3]=0;
+						alarmTime[2]=0;
+					}
+					setNumOf7SegDisplay(alarmTime[2], 2, SPACING_BETWEEN_DIGITS*2);
+				}
+
+				setNumOf7SegDisplay(alarmTime[3], 3, SPACING_BETWEEN_DIGITS*2);
+				newAlarmCreated = 0;
+			}
+			}
+
+			else if (newAlarmCreated == 0 && touchY >= 220 && touchY <=240){
+				if (touchX >= 70 && touchX <= 270){
+					//saveAlarm();
+					//newAlarmCreated = 1;
+				}
+			}
+		}
+	delay(100);
 }
 void setColon(){
 	tft.setCursor(120, 15);
@@ -83,32 +248,7 @@ void setColon(){
 	}
 	tft.print(":");
 }
-void createNewAlarm(){
-	tft.fillScreen(ILI9341_BLACK);
-	tft.fillRect(115, 90, 100, 40, ILI9341_WHITE);
-	tft.setTextSize(4);
-	tft.setTextColor(ILI9341_BLACK);
-	tft.setCursor(117, 92);
-	tft.println("Hour");
-	tft.fillTriangle(80, 90, 110, 90, 95, 120,ILI9341_WHITE);
-	tft.fillTriangle(225, 120, 255, 120, 240, 90,ILI9341_WHITE);
 
-	tft.fillRect(105, 145, 140, 35, ILI9341_WHITE);
-	tft.setTextSize(4);
-	tft.setTextColor(ILI9341_BLACK);
-	tft.setCursor(107, 147);
-	tft.println("Minutes");
-	tft.fillTriangle(60, 180, 90, 180, 75, 145,ILI9341_WHITE);
-	tft.fillTriangle(255, 145, 285, 145, 270, 180,ILI9341_WHITE);
-
-}
-
-void setNumOf7SegDisplay(int digitVal, int digitLoc, int cursorStart){
-	tft.setCursor((digitLoc*(DIGIT_WIDTH+SPACING_BETWEEN_DIGITS)+cursorStart), 15);
-	tft.setTextSize(FONTSIZE);
-	tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-	tft.print(digitVal);
-}
 
 void initializeFour7SegDisplays(){
 		for (int i = 0; i < 2; i++){
@@ -153,30 +293,41 @@ void advanceClock(){
 	if (minDig2==10){
 		minDig1++;
 		minDig2=0;
-		setNumOf7SegDisplay(minDig1, 2, SPACING_BETWEEN_DIGITS*2);
-		setNumOf7SegDisplay(minDig2, 3, SPACING_BETWEEN_DIGITS*2);
+
+		if (!makeAlarm){
+			setNumOf7SegDisplay(minDig1, 2, SPACING_BETWEEN_DIGITS*2);
+			setNumOf7SegDisplay(minDig2, 3, SPACING_BETWEEN_DIGITS*2);
+		}
 	}
 	else{
-		setNumOf7SegDisplay(minDig2, 3, SPACING_BETWEEN_DIGITS*2);
+		if (!makeAlarm){
+			setNumOf7SegDisplay(minDig2, 3, SPACING_BETWEEN_DIGITS*2);
+		}
 	}
 	if (minDig1==6){
 		hoursDig2++;
 		minDig1=0;
 		minDig2=0;
 
-		setNumOf7SegDisplay(minDig1, 2, SPACING_BETWEEN_DIGITS*2);
-		setNumOf7SegDisplay(minDig2, 3, SPACING_BETWEEN_DIGITS*2);
-		if (hoursDig2 <10){
-			setNumOf7SegDisplay(hoursDig2, 1, 0);
+		if (!makeAlarm){
+			setNumOf7SegDisplay(minDig1, 2, SPACING_BETWEEN_DIGITS*2);
+			setNumOf7SegDisplay(minDig2, 3, SPACING_BETWEEN_DIGITS*2);
+
+			if (hoursDig2 <10){
+				setNumOf7SegDisplay(hoursDig2, 1, 0);
+			}
 		}
+
 	}
 
 	if (hoursDig2 == 10){
 		hoursDig1++;
 		hoursDig2 = 0;
 
-		setNumOf7SegDisplay(hoursDig2, 1, 0);
-		setNumOf7SegDisplay(hoursDig1, 0, 0);
+		if (!makeAlarm){
+			setNumOf7SegDisplay(hoursDig2, 1, 0);
+			setNumOf7SegDisplay(hoursDig1, 0, 0);
+		}
 	}
 	if (hoursDig1 == 2 && hoursDig2 == 4){
 		hoursDig1 = 0;
@@ -184,8 +335,10 @@ void advanceClock(){
 		minDig1 = 0;
 		minDig2 = 0;
 
-		setNumOf7SegDisplay(hoursDig1, 0, 0);
-		setNumOf7SegDisplay(hoursDig2, 1, 0);
+		if (!makeAlarm){
+			setNumOf7SegDisplay(hoursDig1, 0, 0);
+			setNumOf7SegDisplay(hoursDig2, 1, 0);
+		}
 	}
 }
 void clockMode(){}
@@ -196,6 +349,16 @@ int main(){
 	tft.setRotation(3);
 	initializeFour7SegDisplays();
 	drawButton();
+
+	long elapsedTime = 0;
+	int halfPeriod = 500/2;
+	/*while (elapsedTime < 10 * 1000){
+		digitalWrite(BUZZER, HIGH);
+		delayMicroseconds(halfPeriod);
+		digitalWrite(BUZZER, LOW);
+		delayMicroseconds(halfPeriod);
+	}
+	digitalWrite(BUZZER, HIGH);*/
 	// initializeFour7SegDisplays();
 	// drawButton();
 	//Alarm alarm;
@@ -208,12 +371,15 @@ int main(){
 	// 	Serial.println(alarm.alarmTime[i]);
 	// }
 
-	while (!read){
+	/*while (!read){
 		if (digitalRead(RESET_TIME_PIN)==LOW){
 			downloadTimeFromComputer();
 			read = 1;
 		}
-	}
+		Serial.println("looping");
+	}*/
+
+	Serial.println("reached next section");
 
 	while (true){
 		if (millis()%60000 == 0){
@@ -221,7 +387,7 @@ int main(){
 		}
 		buttonClick();
 		if (makeAlarm == 1){
-			createNewAlarm();
+
 		}
 	}
 

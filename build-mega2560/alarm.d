@@ -1,4 +1,4 @@
-build-mega2560/createAlarm.o: createAlarm.cpp createAlarm.h \
+build-mega2560/alarm.o: alarm.cpp alarm.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/Arduino.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/binary.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/WCharacter.h \
