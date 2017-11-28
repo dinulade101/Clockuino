@@ -9,11 +9,10 @@ int time[6] = {0};
 int alarmTime[4] = {0};
 // i and read are used to make sure we read all 6 digits of time.
 int serialReadCounter = 0;
-bool read = 0, colonState = 0;
-int hoursDig1 = 0, hoursDig2 = 0, minDig1 = 0, minDig2 = 0;
-bool makeAlarm = 0;
-bool newAlarmCreated = 0;
+bool read = 0, colonState = 0, makeAlarm = 0, newAlarmCreated = 0, alarmsOn = 0;
+int hoursDig1 = 0, hoursDig2 = 0, minDig1 = 0, minDig2 = 0, alarmLED = 8;
 
+#define ALARM_ON 44
 #define RESET_TIME_PIN 11
 #define BUZZER 12
 
@@ -57,6 +56,9 @@ void setup(){
 	//set RESET_TIME_PIN to input and turn on internal pull up resistor
 	pinMode(RESET_TIME_PIN, INPUT);
 	digitalWrite(RESET_TIME_PIN, HIGH);
+	pinMode(ALARM_ON, INPUT);
+	digitalWrite(ALARM_ON, HIGH);
+	pinMode(alarmLED, OUTPUT);
 	pinMode(BUZZER, OUTPUT);
 	tft.begin();
 }
@@ -147,8 +149,8 @@ void buttonClick(){
 	Serial.print("touch Y");
 	Serial.println(touchY);
 	if (!makeAlarm){
-		bool inRangeCreateAlarmButton = touchX > TFT_WIDTH/2 - BUTTON_WIDTH/2 && touchX< TFT_WIDTH/2 - BUTTON_WIDTH/2 + BUTTON_WIDTH;
-		inRangeCreateAlarmButton = inRangeCreateAlarmButton && (touchY > TFT_HEIGHT - BUTTON_HEIGHT - 20) && (touchY<TFT_HEIGHT - BUTTON_HEIGHT - 20+BUTTON_HEIGHT);
+		bool inRangeCreateAlarmButton = touchX > TFT_WIDTH/2 - BUTTON_WIDTH/2 && touchX< TFT_WIDTH/2 + BUTTON_WIDTH/2;
+		inRangeCreateAlarmButton = inRangeCreateAlarmButton && (touchY > TFT_HEIGHT - BUTTON_HEIGHT - 20) && (touchY<TFT_HEIGHT - 20);
 		if (inRangeCreateAlarmButton)
 		{
 			makeAlarm = 1;
@@ -371,24 +373,27 @@ int main(){
 	// 	Serial.println(alarm.alarmTime[i]);
 	// }
 
-	/*while (!read){
+	while (!read){
 		if (digitalRead(RESET_TIME_PIN)==LOW){
 			downloadTimeFromComputer();
 			read = 1;
+			Serial.print("BYE");
 		}
-		Serial.println("looping");
-	}*/
-
-	Serial.println("reached next section");
+		//Serial.print("HI");
+	}
 
 	while (true){
 		if (millis()%60000 == 0){
 			advanceClock();
 		}
 		buttonClick();
-		if (makeAlarm == 1){
+		if (digitalRead(ALARM_ON) == LOW){alarmsOn = !alarmsOn;}
+		// check if there's an alarm and if alarms are turned on:
+		// if no alarms or alarms turned off : bulb off
+		if(!alarmsOn || EEPROM.read(0) == 0){digitalWrite(alarmLED, LOW);}
+		// if alarm present and alarms turned on: bulb on
+		if(EEPROM.read(0) != 0 && alarmsOn){digitalWrite(alarmLED, HIGH);}
 
-		}
 	}
 
 	Serial.end();
