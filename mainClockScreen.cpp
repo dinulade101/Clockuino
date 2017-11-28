@@ -112,7 +112,7 @@ void reloadMainScreen(){
 	drawButton();
 }
 
-void saveAlarm(){
+void saveAlarmMainScreen(){
 	Alarm alarm;
 	for (int i=0; i<4; i++){
 		alarm.alarmTime[i] = alarmTime[i];
@@ -228,8 +228,8 @@ void buttonClick(){
 
 			else if (newAlarmCreated == 0 && touchY >= 220 && touchY <=240){
 				if (touchX >= 70 && touchX <= 270){
-					//saveAlarm();
-					//newAlarmCreated = 1;
+					saveAlarmMainScreen();
+					newAlarmCreated = 1;
 				}
 			}
 		}
