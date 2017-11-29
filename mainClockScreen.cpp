@@ -8,10 +8,13 @@
 int time[6] = {0};
 int alarmTime[4] = {0};
 // i and read are used to make sure we read all 6 digits of time.
+const int patternLED[4] = {22, 24, 26, 28};
+const int patternPins[4] = {23, 25, 27, 29};
 int serialReadCounter = 0;
 bool read = 0, colonState = 0, makeAlarm = 0, newAlarmCreated = 0, alarmsOn = 0;
+bool patternSolved = 0;
 int hoursDig1 = 0, hoursDig2 = 0, minDig1 = 0, minDig2 = 0, alarmLED = 8;
-
+uint8_t patternToSolve[4] = {0};
 #define ALARM_ON 44
 #define RESET_TIME_PIN 11
 #define BUZZER 12
@@ -58,6 +61,11 @@ void setup(){
 	digitalWrite(RESET_TIME_PIN, HIGH);
 	pinMode(ALARM_ON, INPUT);
 	digitalWrite(ALARM_ON, HIGH);
+	for (int i = 0; i < 4; i++){
+		pinMode(patternPins[i], INPUT);
+		digitalWrite(patternPins[i], HIGH);
+		pinMode(patternLED[i],OUTPUT);
+	}
 	pinMode(alarmLED, OUTPUT);
 	pinMode(BUZZER, OUTPUT);
 	tft.begin();
@@ -290,6 +298,39 @@ void downloadTimeFromComputer(){
   }
 }
 
+void alarmGoOff(){
+	uint8_t randomNumber;
+	for (int i = 0; i < 4; i++){
+		// gets a random number between 0-3 and then adds it to the pattern
+		randomNumber = random(0, 4);
+		patternToSolve[i] = randomNumber;
+		digitalWrite(patternLED[i], HIGH);
+		delay(100);
+		digitalWrite(patternLED[i], LOW);
+	}
+}
+void solveThePattern(){
+	// leave buzzer on
+	// enum patternStates {waiting, patternIncorrect, patternCorrect}
+	// patternStates currentState = waiting;
+	// // while (True){
+	// 	if (currentState == waiting){
+  //
+	// 	}
+	// 	else if (currentState == patternIncorrect){
+	// 		currentState = waiting;
+	// 	}
+	// 	else if (currentState == patternCorrect){
+  //
+	// 	}
+	// }
+	while(digitalRead(patternPins[patternToSolve[0]]) == HIGH){}
+	while(digitalRead(patternPins[patternToSolve[1]]) == HIGH){}
+	while(digitalRead(patternPins[patternToSolve[2]]) == HIGH){}
+	while(digitalRead(patternPins[patternToSolve[3]]) == HIGH){}
+	// turn buzzer off
+	Serial.println("Pattern solved!");
+}
 void advanceClock(){
 	minDig2++;
 	if (minDig2==10){
@@ -319,7 +360,6 @@ void advanceClock(){
 				setNumOf7SegDisplay(hoursDig2, 1, 0);
 			}
 		}
-
 	}
 
 	if (hoursDig2 == 10){
@@ -343,7 +383,7 @@ void advanceClock(){
 		}
 	}
 }
-void clockMode(){}
+
 int main(){
 	setup();
 	tft.begin();
@@ -377,7 +417,7 @@ int main(){
 		if (digitalRead(RESET_TIME_PIN)==LOW){
 			downloadTimeFromComputer();
 			read = 1;
-			Serial.print("BYE");
+			//Serial.print("BYE");
 		}
 		//Serial.print("HI");
 	}
@@ -394,6 +434,9 @@ int main(){
 		// if alarm present and alarms turned on: bulb on
 		if(EEPROM.read(0) != 0 && alarmsOn){digitalWrite(alarmLED, HIGH);}
 
+		while(!patternSolved){
+			alarmGoOff();
+		}
 	}
 
 	Serial.end();
