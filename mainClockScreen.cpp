@@ -301,7 +301,7 @@ void downloadTimeFromComputer(){
 void alarmGoOff(){
 	uint8_t randomNumber;
 	for (int i = 0; i < 4; i++){
-		// gets a random number between 0-3 and then adds it to the pattern
+		// gets a "unique random" number between 0-3 and then adds it to the pattern
 		randomNumber = random(0, 4);
 		patternToSolve[i] = randomNumber;
 		digitalWrite(patternLED[i], HIGH);
@@ -311,25 +311,51 @@ void alarmGoOff(){
 }
 void solveThePattern(){
 	// leave buzzer on
-	// enum patternStates {waiting, patternIncorrect, patternCorrect}
-	// patternStates currentState = waiting;
-	// // while (True){
-	// 	if (currentState == waiting){
-  //
-	// 	}
-	// 	else if (currentState == patternIncorrect){
-	// 		currentState = waiting;
-	// 	}
-	// 	else if (currentState == patternCorrect){
-  //
-	// 	}
-	// }
-	while(digitalRead(patternPins[patternToSolve[0]]) == HIGH){}
-	while(digitalRead(patternPins[patternToSolve[1]]) == HIGH){}
-	while(digitalRead(patternPins[patternToSolve[2]]) == HIGH){}
-	while(digitalRead(patternPins[patternToSolve[3]]) == HIGH){}
-	// turn buzzer off
-	Serial.println("Pattern solved!");
+	enum patternStates {waiting, gettingPattern1, gettingPattern2, gettingPattern3, patternCorrect};
+	patternStates currentState = waiting;
+	while (true){
+		if (currentState == waiting){
+			if (digitalRead(patternPins[patternToSolve[0]]) == LOW){currentState = gettingPattern1;}
+		}
+		else if (currentState == gettingPattern1){
+			// user started interacting, start getting the pattern
+			if(digitalRead(patternPins[patternToSolve[1]]) == LOW){currentState = gettingPattern2;}
+			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
+						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
+							currentState = gettingPattern1;
+						}
+			else{currentState = waiting;}
+		}
+		else if (currentState == gettingPattern2){
+			// user started interacting, start getting the pattern
+			if(digitalRead(patternPins[patternToSolve[2]]) == LOW){currentState = gettingPattern3;}
+			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
+						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
+							currentState = gettingPattern1;
+						}
+			else{currentState = waiting;}
+		}
+		else if (currentState == gettingPattern3){
+			// user started interacting, start getting the pattern
+			if(digitalRead(patternPins[patternToSolve[3]]) == LOW){currentState = patternCorrect;}
+			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
+						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
+							currentState = gettingPattern1;
+						}
+			else{currentState = waiting;}
+		}
+		else if (currentState == patternCorrect){
+			Serial.println("Pattern solved!");
+			break;
+			// turn buzzer off
+		}
+	}
+	// while(digitalRead(patternPins[patternToSolve[0]]) == HIGH){}
+	// while(digitalRead(patternPins[patternToSolve[1]]) == HIGH){}
+	// while(digitalRead(patternPins[patternToSolve[2]]) == HIGH){}
+	// while(digitalRead(patternPins[patternToSolve[3]]) == HIGH){}
+
+
 }
 void advanceClock(){
 	minDig2++;
