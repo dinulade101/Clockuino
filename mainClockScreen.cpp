@@ -464,51 +464,81 @@ void downloadTimeFromComputer(){
 		}
   }
 }
-
+/*
 void soundTheTone(){
 	long elapsedTime = 0;
 	int halfPeriod = 500/2;
-	/*while (elapsedTime < 10 * 1000){
+	while (elapsedTime < 10 * 1000){
 		digitalWrite(BUZZER, HIGH);
 		delayMicroseconds(halfPeriod);
 		digitalWrite(BUZZER, LOW);
 		delayMicroseconds(halfPeriod);
 	}
-	digitalWrite(BUZZER, HIGH);*/
+	digitalWrite(BUZZER, HIGH);
 }
-
+*/
 void alarmGoOff(){
 	uint8_t randomNumber;
 	for (int i = 0; i < 4; i++){
-		// gets a random number between 0-3 and then adds it to the pattern
+		// gets a "unique random" number between 0-3 and then adds it to the pattern
 		randomNumber = random(0, 4);
 		patternToSolve[i] = randomNumber;
 		digitalWrite(patternLED[i], HIGH);
+		digitalWrite(BUZZER, HIGH);
 		delay(100);
 		digitalWrite(patternLED[i], LOW);
+		delayMicroseconds(100);
+		digitalWrite(BUZZER, LOW);
+		delayMicroseconds(100);
 	}
 }
 void solveThePattern(){
 	// leave buzzer on
-	// enum patternStates {waiting, patternIncorrect, patternCorrect}
-	// patternStates currentState = waiting;
-	// // while (True){
-	// 	if (currentState == waiting){
-  //
-	// 	}
-	// 	else if (currentState == patternIncorrect){
-	// 		currentState = waiting;
-	// 	}
-	// 	else if (currentState == patternCorrect){
-  //
-	// 	}
-	// }
-	while(digitalRead(patternPins[patternToSolve[0]]) == HIGH){}
-	while(digitalRead(patternPins[patternToSolve[1]]) == HIGH){}
-	while(digitalRead(patternPins[patternToSolve[2]]) == HIGH){}
-	while(digitalRead(patternPins[patternToSolve[3]]) == HIGH){}
-	// turn buzzer off
-	Serial.println("Pattern solved!");
+	enum patternStates {waiting, gettingPattern1, gettingPattern2, gettingPattern3, patternCorrect};
+	patternStates currentState = waiting;
+	while (true){
+		if (currentState == waiting){
+			if (digitalRead(patternPins[patternToSolve[0]]) == LOW){currentState = gettingPattern1;}
+		}
+		else if (currentState == gettingPattern1){
+			// user started interacting, start getting the pattern
+			if(digitalRead(patternPins[patternToSolve[1]]) == LOW){currentState = gettingPattern2;}
+			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
+						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
+							currentState = gettingPattern1;
+						}
+			else{currentState = waiting;}
+		}
+		else if (currentState == gettingPattern2){
+			// user started interacting, start getting the pattern
+			if(digitalRead(patternPins[patternToSolve[2]]) == LOW){currentState = gettingPattern3;}
+			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
+						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
+							currentState = gettingPattern1;
+						}
+			else{currentState = waiting;}
+		}
+		else if (currentState == gettingPattern3){
+			// user started interacting, start getting the pattern
+			if(digitalRead(patternPins[patternToSolve[3]]) == LOW){currentState = patternCorrect;}
+			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
+						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
+							currentState = gettingPattern1;
+						}
+			else{currentState = waiting;}
+		}
+		else if (currentState == patternCorrect){
+			Serial.println("Pattern solved!");
+			break;
+			// turn buzzer off
+		}
+	}
+	// while(digitalRead(patternPins[patternToSolve[0]]) == HIGH){}
+	// while(digitalRead(patternPins[patternToSolve[1]]) == HIGH){}
+	// while(digitalRead(patternPins[patternToSolve[2]]) == HIGH){}
+	// while(digitalRead(patternPins[patternToSolve[3]]) == HIGH){}
+
+
 }
 void advanceClock(){
 	minDig2++;
@@ -575,9 +605,11 @@ void advanceClock(){
 		if (hoursDig1 == alarm.h1 && hoursDig2 == alarm.h2 && minDig1 == alarm.m1 && minDig2 == alarm.m2 && alarm.state){
 			while (!snooze){
 				digitalWrite(ALARM_FLASH, HIGH);
-				delay(500);
+				digitalWrite(BUZZER, HIGH);
+				delay(100);
 				digitalWrite(ALARM_FLASH, LOW);
-				delay(500);
+				digitalWrite(BUZZER, LOW);
+				delay(100);
 			}
 		}
 
@@ -629,19 +661,19 @@ int main(){
 	// 	Serial.println(alarm.alarmTime[i]);
 	// }
 
-	/*while (!read){
+	while (!read){
 		if (digitalRead(RESET_TIME_PIN)==LOW){
 			downloadTimeFromComputer();
 			read = 1;
 			//Serial.print("BYE");
 		}
 		//Serial.print("HI");
-	}*/
+	}
 
 
 
 	while (true){
-		if (millis()%600 == 0){
+		if (millis()%60000 == 0){
 			advanceClock();
 		}
 		buttonClick();
