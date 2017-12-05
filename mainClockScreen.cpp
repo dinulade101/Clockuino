@@ -482,73 +482,61 @@ void soundTheTone(){
 
 void solveThePattern(){
 	delay(2000);
-	int buttonsReceived[4];
-	enum patternStates {waiting, gettingPattern1, gettingPattern2, gettingPattern3, patternCorrect};
-	patternStates currentState = waiting;
-
+	int buttonsReceived[4], j = 0;
+	bool correct = 1;
+	// enum patternStates {waiting, gettingPattern1, gettingPattern2, gettingPattern3, patternCorrect};
+	// patternStates currentState = waiting;
 	while (true){
 		digitalWrite(BUZZER, HIGH);
 		delayMicroseconds(100);
 		digitalWrite(BUZZER, LOW);
 		delayMicroseconds(100);
-		if(digitalRead(patternPins[0]) == LOW){}
-		else if(digitalRead(patternPins[1]) == LOW){}
-		else if(digitalRead(patternPins[2]) == LOW){}
-		else if(digitalRead(patternPins[patternToSolve[3]]) == LOW){}
-
-		// if (currentState == waiting){
-		// 	Serial.println("waiting");
-		// 	if (digitalRead(patternPins[patternToSolve[0]]) == LOW){currentState = gettingPattern1;}
-		// }
-		// else if (currentState == gettingPattern1){
-		// 	Serial.println("gettingpat1");
-		// 	// user started interacting, start getting the
-		// 	if(digitalRead(patternPins[patternToSolve[1]]) == LOW){currentState = gettingPattern2;}
-		// 	else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
-		// 				&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-		// 					// currentState = gettingPattern1;
-		// 				}
-		// 	if(digitalRead(patternPins[patternToSolve[1]]) == LOW){currentState = gettingPattern2;}
-		// 	else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
-		// 				&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-		// 					currentState = gettingPattern1;
-		// 				}
-		// 	else{currentState = waiting;}
-		// }
-		// else if (currentState == gettingPattern2){
-		// 	Serial.println("gettingpat2");
-		// 	// user started interacting, start getting the pattern
-		// 	if(digitalRead(patternPins[patternToSolve[2]]) == LOW){currentState = gettingPattern3;}
-		// 	else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
-		// 				&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-		// 					// currentState = gettingPattern1
-		// 					currentState = gettingPattern1;
-		// 				}
-		// 	else{currentState = waiting;}
-		// }
-		// else if (currentState == gettingPattern3){
-		// 	Serial.println("gettingpat3");
-		// 	// user started interacting, start getting the pattern
-		// 	if(digitalRead(patternPins[patternToSolve[3]]) == LOW){currentState = patternCorrect;}
-		// 	else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
-		// 				&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-		// 				}
-		// 	else{currentState = waiting;}
-		// }
-		// else if (currentState == patternCorrect){
-		// 	Serial.println("Pattern solved!");
-		// 	// turn buzzer off
-		// 	//digitalWrite(BUZZER, LOW);
-		// 	break;
-		// }
+		if(digitalRead(patternPins[0]) == LOW){
+			while(digitalRead(patternPins[0]) == LOW){delay(10);}
+			buttonsReceived[j] = 0;
+			j++;
+		}
+		else if(digitalRead(patternPins[1]) == LOW){
+			while(digitalRead(patternPins[1]) == LOW){delay(10);}
+			buttonsReceived[j] = 1;
+			j++;
+		}
+		else if(digitalRead(patternPins[2]) == LOW){
+			while(digitalRead(patternPins[2]) == LOW){delay(10);}
+			buttonsReceived[j] = 2;
+			j++;
+		}
+		else if(digitalRead(patternPins[3]) == LOW){
+			while(digitalRead(patternPins[3]) == LOW){delay(10);}
+			buttonsReceived[j] = 3;
+			j++;
+		}
+		if (j >= 4){
+			for (int i = 0; i < 4; i++){
+				if (buttonsReceived[i] != patternToSolve[i]){
+					correct = 0;
+				}
+			}
+			if (correct){
+				break;}
+			else {
+				j = 0;
+				buttonsReceived[0] = 0;
+				buttonsReceived[1] = 0;
+				buttonsReceived[2] = 0;
+				buttonsReceived[3] = 0;
+			}
+		}
 	}
 }
+
 void alarmGoOff(){
 	uint8_t randomNumber;
 	for (int i = 0; i < 4; i++){
 		// gets a "random" number between 0-3 and then adds it to the pattern
 		randomNumber = (analogRead(analogPin) % 4);
 		patternToSolve[i] = randomNumber;
+		Serial.println(patternToSolve[i]);
 		digitalWrite(patternLED[patternToSolve[i]], HIGH);
 		delay(2000);
 		digitalWrite(patternLED[patternToSolve[i]], LOW);
