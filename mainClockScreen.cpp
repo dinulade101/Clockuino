@@ -482,75 +482,76 @@ void soundTheTone(){
 
 void solveThePattern(){
 	delay(2000);
-	// leave buzzer on
+	int buttonsReceived[4];
 	enum patternStates {waiting, gettingPattern1, gettingPattern2, gettingPattern3, patternCorrect};
 	patternStates currentState = waiting;
+
 	while (true){
 		digitalWrite(BUZZER, HIGH);
 		delayMicroseconds(100);
 		digitalWrite(BUZZER, LOW);
 		delayMicroseconds(100);
-		if (currentState == waiting){
-			while(true){
-				bool x = digitalRead(patternPins[patternToSolve[0]];
-				if (x == 0){currentState = gettingPattern1;}
-			}
-			// Serial.println("waiting");
-			// if (digitalRead(patternPins[patternToSolve[0]]) == LOW){currentState = gettingPattern1;}
-		}
-		else if (currentState == gettingPattern1){
-			Serial.println("gettingpat1");
-			// user started interacting, start getting the pattern
-			while(true){}
-			if(digitalRead(patternPins[patternToSolve[1]]) == LOW){currentState = gettingPattern2;}
-			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
-						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-							// currentState = gettingPattern1;
-						}
-			else{currentState = waiting;}
-		}
-		else if (currentState == gettingPattern2){
-			Serial.println("gettingpat2");
-			// user started interacting, start getting the pattern
-			if(digitalRead(patternPins[patternToSolve[2]]) == LOW){currentState = gettingPattern3;}
-			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
-						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-							// currentState = gettingPattern1;
-						}
-			else{currentState = waiting;}
-		}
-		else if (currentState == gettingPattern3){
-			Serial.println("gettingpat3");
-			// user started interacting, start getting the pattern
-			if(digitalRead(patternPins[patternToSolve[3]]) == LOW){currentState = patternCorrect;}
-			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
-						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-							//currentState = gettingPattern1;
-						}
-			else{currentState = waiting;}
-		}
-		else if (currentState == patternCorrect){
-			Serial.println("Pattern solved!");
-			// turn buzzer off
-			digitalWrite(BUZZER, LOW);
-			break;
-		}
+		if(digitalRead(patternPins[0]) == LOW){}
+		else if(digitalRead(patternPins[1]) == LOW){}
+		else if(digitalRead(patternPins[2]) == LOW){}
+		else if(digitalRead(patternPins[patternToSolve[3]]) == LOW){}
+
+		// if (currentState == waiting){
+		// 	Serial.println("waiting");
+		// 	if (digitalRead(patternPins[patternToSolve[0]]) == LOW){currentState = gettingPattern1;}
+		// }
+		// else if (currentState == gettingPattern1){
+		// 	Serial.println("gettingpat1");
+		// 	// user started interacting, start getting the
+		// 	if(digitalRead(patternPins[patternToSolve[1]]) == LOW){currentState = gettingPattern2;}
+		// 	else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
+		// 				&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
+		// 					// currentState = gettingPattern1;
+		// 				}
+		// 	if(digitalRead(patternPins[patternToSolve[1]]) == LOW){currentState = gettingPattern2;}
+		// 	else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
+		// 				&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
+		// 					currentState = gettingPattern1;
+		// 				}
+		// 	else{currentState = waiting;}
+		// }
+		// else if (currentState == gettingPattern2){
+		// 	Serial.println("gettingpat2");
+		// 	// user started interacting, start getting the pattern
+		// 	if(digitalRead(patternPins[patternToSolve[2]]) == LOW){currentState = gettingPattern3;}
+		// 	else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
+		// 				&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
+		// 					// currentState = gettingPattern1
+		// 					currentState = gettingPattern1;
+		// 				}
+		// 	else{currentState = waiting;}
+		// }
+		// else if (currentState == gettingPattern3){
+		// 	Serial.println("gettingpat3");
+		// 	// user started interacting, start getting the pattern
+		// 	if(digitalRead(patternPins[patternToSolve[3]]) == LOW){currentState = patternCorrect;}
+		// 	else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
+		// 				&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
+		// 				}
+		// 	else{currentState = waiting;}
+		// }
+		// else if (currentState == patternCorrect){
+		// 	Serial.println("Pattern solved!");
+		// 	// turn buzzer off
+		// 	//digitalWrite(BUZZER, LOW);
+		// 	break;
+		// }
 	}
 }
-
 void alarmGoOff(){
 	uint8_t randomNumber;
-	//digitalWrite(BUZZER, HIGH);
 	for (int i = 0; i < 4; i++){
 		// gets a "random" number between 0-3 and then adds it to the pattern
 		randomNumber = (analogRead(analogPin) % 4);
 		patternToSolve[i] = randomNumber;
 		digitalWrite(patternLED[patternToSolve[i]], HIGH);
-		// digitalWrite(BUZZER, HIGH);
 		delay(2000);
 		digitalWrite(patternLED[patternToSolve[i]], LOW);
-		Serial.println("PATTERN TO SOLVE");
-		Serial.print(patternToSolve[i]);
 	}
 	solveThePattern();
 }
@@ -695,8 +696,6 @@ int main(){
 		// if(EEPROM.read(0) != 0){
 		// 	Serial.println("alarm");
 		// }
-
-
 	}
 
 	Serial.end();
