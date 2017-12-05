@@ -487,17 +487,25 @@ void solveThePattern(){
 	patternStates currentState = waiting;
 	while (true){
 		digitalWrite(BUZZER, HIGH);
+		delayMicroseconds(100);
+		digitalWrite(BUZZER, LOW);
+		delayMicroseconds(100);
 		if (currentState == waiting){
-			Serial.println("waiting");
-			if (digitalRead(patternPins[patternToSolve[0]]) == LOW){currentState = gettingPattern1;}
+			while(true){
+				bool x = digitalRead(patternPins[patternToSolve[0]];
+				if (x == 0){currentState = gettingPattern1;}
+			}
+			// Serial.println("waiting");
+			// if (digitalRead(patternPins[patternToSolve[0]]) == LOW){currentState = gettingPattern1;}
 		}
 		else if (currentState == gettingPattern1){
 			Serial.println("gettingpat1");
 			// user started interacting, start getting the pattern
+			while(true){}
 			if(digitalRead(patternPins[patternToSolve[1]]) == LOW){currentState = gettingPattern2;}
 			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
 						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-							currentState = gettingPattern1;
+							// currentState = gettingPattern1;
 						}
 			else{currentState = waiting;}
 		}
@@ -507,7 +515,7 @@ void solveThePattern(){
 			if(digitalRead(patternPins[patternToSolve[2]]) == LOW){currentState = gettingPattern3;}
 			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
 						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-							currentState = gettingPattern1;
+							// currentState = gettingPattern1;
 						}
 			else{currentState = waiting;}
 		}
@@ -517,7 +525,7 @@ void solveThePattern(){
 			if(digitalRead(patternPins[patternToSolve[3]]) == LOW){currentState = patternCorrect;}
 			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
 						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-							currentState = gettingPattern1;
+							//currentState = gettingPattern1;
 						}
 			else{currentState = waiting;}
 		}
@@ -543,9 +551,6 @@ void alarmGoOff(){
 		digitalWrite(patternLED[patternToSolve[i]], LOW);
 		Serial.println("PATTERN TO SOLVE");
 		Serial.print(patternToSolve[i]);
-		// delayMicroseconds(100);
-		// digitalWrite(BUZZER, LOW);
-		// delayMicroseconds(100);
 	}
 	solveThePattern();
 }
