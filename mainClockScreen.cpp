@@ -40,8 +40,6 @@ int snooze = 0;
 // initialize array to store alarms
 Alarm alarmArrayGlobal[100];
 
-// #define ALARM_ON 44
-
 // define digital pin numbers for alarm
 #define RESET_TIME_PIN 11   // pin that you press to receive time
 #define BUZZER 12           // the buzzer
@@ -396,6 +394,7 @@ void deleteAlarm(int alarmNum){
 		EEPROM.put(0, numOfAlarms-1);
 		viewAlarmsList();
 	}
+	checkAlarmCond();
 }
 
 void buttonClick(){
@@ -580,6 +579,7 @@ void downloadTimeFromComputer(){
   }
 }
 
+// launches new screen to indicate that alarm is going off
 void launchAlarmPopUp(){
 	screenState = 3;
 	tft.fillScreen(ILI9341_BLACK);
@@ -607,6 +607,7 @@ void alarmGoOff(){
 		digitalWrite(patternLED[patternToSolve[i]], LOW);
 	}
 	solveThePattern();
+  reloadMainScreen();
 }
 
 void solveThePattern(){
@@ -618,12 +619,14 @@ void solveThePattern(){
   // boolean value to see if user solved pattern
   bool correct = 1;
 	while (true){
+    // flash LED
+    digitalWrite(ALARM_FLASH, HIGH);
+    digitalWrite(ALARM_FLASH, LOW);
     // keep buzzer on till user gets the pattern right
     digitalWrite(BUZZER, HIGH);
 		delayMicroseconds(100);
 		digitalWrite(BUZZER, LOW);
 		delayMicroseconds(100);
-
     /*
       Record the buttons that the user presses, and fill the array
       buttonsReceived with them, to later compare if the user solved the pattern
@@ -659,7 +662,7 @@ void solveThePattern(){
 				}
 			}
 
-			if (correct){break;}     // break the pattern if the user gets it
+			if(correct){break;}     // break the pattern if the user gets it
 			else {                   // reset the pattern if the user doesn't
 				alarmGoOff();
 			}
@@ -718,11 +721,7 @@ void advanceClock(){
     if (hoursDig1 == alarm.h1 && hoursDig2 == alarm.h2 && minDig1 == alarm.m1
         && minDig2 == alarm.m2 && alarm.state){
       launchAlarmPopUp();
-      while (!snooze){
-        alarmGoOff();
-        digitalWrite(ALARM_FLASH, HIGH);
-        digitalWrite(ALARM_FLASH, LOW);
-      }
+      alarmGoOff();
     }
   }
 }
