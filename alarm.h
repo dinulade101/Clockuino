@@ -7,7 +7,7 @@
 class Alarm{
 	public:
 	//uint8_t alarmTime[3];
-	uint8_t h1, h2, m1, m2;
+	uint8_t h1, h2, m1, m2, origIdx;
 	bool state;
 };
 void saveAlarm(int eeAddress, Alarm alarmObj);

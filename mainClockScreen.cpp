@@ -18,7 +18,9 @@ uint8_t patternToSolve[4] = {0};
 int alarmListVisible = 0;
 int screenState = 0;
 int numOfAlarms = 0;
+int alarmPageNum = 1;
 int snooze = 0;
+Alarm alarmArrayGlobal[100];
 #define ALARM_ON 44
 #define RESET_TIME_PIN 11
 #define BUZZER 12
@@ -131,6 +133,7 @@ void createNewAlarm(){
 
 void reloadMainScreen(){
 	screenState = 0;
+	alarmPageNum = 1;
 	tft.fillScreen(ILI9341_BLACK);
 	initializeFour7SegDisplays();
 	drawButton();
@@ -163,6 +166,103 @@ void saveAlarmMainScreen(){
 	Serial.println("save alarm called");
 	checkAlarmCond();
 }
+
+
+
+
+
+
+/****************************alarm sorting ********/
+
+void swap(Alarm& r1, Alarm& r2) {
+	Alarm tmp = r1;
+	r1 = r2;
+	r2 = tmp;
+}
+
+int pivot(Alarm alarmsArray[], int n, int pi) {
+  swap(alarmsArray[pi], alarmsArray[n-1]);
+  int lo = 0;
+  int hi = n-2;
+
+  // iterate until lo>high
+  while (lo <= hi){
+		int hiAlarmMins = (alarmsArray[hi].h1*10+alarmsArray[hi].h2)*60+alarmsArray[hi].m1*10+alarmsArray[hi].m2;
+		int nMinus1AlarmMins = (alarmsArray[n-1].h1*10+alarmsArray[n-1].h2)*60+alarmsArray[n-1].m1*10+alarmsArray[n-1].m2;
+		int loAlarmMins = (alarmsArray[lo].h1*10+alarmsArray[lo].h2)*60+alarmsArray[lo].m1*10+alarmsArray[lo].m2;
+
+    if (hiAlarmMins > nMinus1AlarmMins) {
+      hi--;
+    }
+    else if (loAlarmMins <= nMinus1AlarmMins) {
+      lo++;
+    }
+    else{
+      swap(alarmsArray[lo], alarmsArray[hi]);
+    }
+  }
+
+  swap(alarmsArray[lo], alarmsArray[n-1]);
+  return lo;
+}
+
+//Sort an array with n elements using Quick Sort
+void qsort(Alarm alarmsArray[], int n) {
+	if (n < 1){return;}
+  int pi = n/2;
+	Serial.print("hi1");
+
+  int newPi = pivot(alarmsArray, n, pi);
+
+  qsort(alarmsArray, newPi);
+  qsort(alarmsArray + (newPi + 1), n - (newPi + 1));
+	Serial.print("dhi2");
+
+}
+
+/***** alarm sorting end ********/
+
+
+void stuf(){
+for (int i=((alarmPageNum-1)*4)+1; i<=4*(alarmPageNum); i++){
+	if (i > numOfAlarms){
+		break;
+	}
+	Alarm alarm;
+	/*for (int i=0; i<4; i++){
+		alarm.alarmTime[i] = 0;
+	}*/
+	EEPROM.get((i-1)*sizeof(alarm)+sizeof(int), alarm);
+	//delay(1000);
+	/*for (int j=0; j<4; j++){
+		Serial.print(alarm.alarmTime[j]);
+	}*/
+	Serial.print(alarm.h1);
+	Serial.print(alarm.h2);
+	Serial.print(alarm.m1);
+	Serial.print(alarm.m2);
+
+	tft.setTextSize(5);
+	//tft.fillRect(0, 50*(i-1), TFT_WIDTH, 35, ILI9341_BLACK);
+	tft.fillRect(0, 50*(i-1-(4)*(alarmPageNum-1)), TFT_WIDTH, 35, ILI9341_BLACK);
+
+	if (alarm.state){
+		//tft.fillCircle(3*TFT_WIDTH/4, 50*(i-1)+12, 10, ILI9341_RED);
+		tft.fillRect(TFT_WIDTH/2, 50*(i-1-(4)*(alarmPageNum-1)), TFT_WIDTH/2, 35, GREEN);
+	}
+	else{
+		tft.fillRect(TFT_WIDTH/2, 50*(i-1-(4)*(alarmPageNum-1)), TFT_WIDTH/2, 35, ILI9341_RED);
+	}
+	tft.setCursor(0, 50*(i-1 - (4)*(alarmPageNum-1)));
+	String alarmObjectTimeStr = String();
+	alarmObjectTimeStr = String(alarm.h1, HEX) + String(alarm.h2, HEX) + ':' + String(alarm.m1, HEX) + String(alarm.m2, HEX);
+	tft.setTextColor(ILI9341_WHITE);
+	tft.println(alarmObjectTimeStr);
+	//Serial.println();
+}
+
+}
+
 void viewAlarmsList(){
 	screenState = 2;
 	tft.fillScreen(ILI9341_BLACK);
@@ -172,7 +272,8 @@ void viewAlarmsList(){
 	tft.setCursor(0, 200);
 	tft.println("X");
 
-	tft.fillTriangle(TFT_WIDTH/2-17, TFT_HEIGHT-35, TFT_WIDTH/2, TFT_HEIGHT, TFT_WIDTH/2+17, TFT_HEIGHT-35,ILI9341_WHITE);
+	tft.fillTriangle(TFT_WIDTH/2, TFT_HEIGHT-35, TFT_WIDTH/2+17, TFT_HEIGHT, TFT_WIDTH/2+34, TFT_HEIGHT-35,ILI9341_WHITE);
+	tft.fillTriangle(TFT_WIDTH/2-40, TFT_HEIGHT, TFT_WIDTH/2-23, TFT_HEIGHT-35, TFT_WIDTH/2-6, TFT_HEIGHT,ILI9341_WHITE);
 
 	Serial.println("print alarms");
 	Serial.print("EEPROM legnth");
@@ -180,12 +281,17 @@ void viewAlarmsList(){
 	numOfAlarms = EEPROM.read(0);
 	Serial.print("numer of alarms");
 	Serial.println(numOfAlarms);
-	for (int i=1; i<numOfAlarms+1; i++){
+	for (int i=1; i<=numOfAlarms; i++){
+		if (i > numOfAlarms){
+			break;
+		}
 		Alarm alarm;
 		/*for (int i=0; i<4; i++){
 			alarm.alarmTime[i] = 0;
 		}*/
 		EEPROM.get((i-1)*sizeof(alarm)+sizeof(int), alarm);
+		alarm.origIdx = i;
+
 		//delay(1000);
 		/*for (int j=0; j<4; j++){
 			Serial.print(alarm.alarmTime[j]);
@@ -194,23 +300,53 @@ void viewAlarmsList(){
 		Serial.print(alarm.h2);
 		Serial.print(alarm.m1);
 		Serial.print(alarm.m2);
+		alarmArrayGlobal[i-1]=alarm;
+	}
+		qsort(alarmArrayGlobal, numOfAlarms);
+//	alarmArrayPointer = &alarmArray;
+
+	for (int i=((alarmPageNum-1)*4)+1; i<=4*(alarmPageNum); i++){
+		Serial.println("hi");
+		if (i > numOfAlarms){
+			break;
+		}
+		Alarm alarm = alarmArrayGlobal[i-1];
+		/*for (int i=0; i<4; i++){
+			alarm.alarmTime[i] = 0;
+		}*/
+		//delay(1000);
+		/*for (int j=0; j<4; j++){
+			Serial.print(alarm.alarmTime[j]);
+		}*/
+		Serial.print(alarm.h1);
+		Serial.print(alarm.h2);
+		Serial.print(alarm.m1);
+		Serial.println(alarm.m2);
+		Serial.print("alarm orig list");
+		Serial.println(alarm.origIdx);
 
 		tft.setTextSize(5);
 		//tft.fillRect(0, 50*(i-1), TFT_WIDTH, 35, ILI9341_BLACK);
+		tft.fillRect(0, 50*(i-1-(4)*(alarmPageNum-1)), TFT_WIDTH, 35, ILI9341_BLACK);
+
 		if (alarm.state){
 			//tft.fillCircle(3*TFT_WIDTH/4, 50*(i-1)+12, 10, ILI9341_RED);
-			tft.fillRect(TFT_WIDTH/2, 50*(i-1), TFT_WIDTH/2, 35, GREEN);
+			tft.fillRect(TFT_WIDTH/2, 50*(i-1-(4)*(alarmPageNum-1)), TFT_WIDTH/3, 35, GREEN);
 		}
 		else{
-			tft.fillRect(TFT_WIDTH/2, 50*(i-1), TFT_WIDTH/2, 35, ILI9341_RED);
+			tft.fillRect(TFT_WIDTH/2, 50*(i-1-(4)*(alarmPageNum-1)), TFT_WIDTH/3, 35, ILI9341_RED);
 		}
-		tft.setCursor(0, 50*(i-1));
+		tft.setCursor(0, 50*(i-1 - (4)*(alarmPageNum-1)));
 		String alarmObjectTimeStr = String();
 		alarmObjectTimeStr = String(alarm.h1, HEX) + String(alarm.h2, HEX) + ':' + String(alarm.m1, HEX) + String(alarm.m2, HEX);
 		tft.setTextColor(ILI9341_WHITE);
 		tft.println(alarmObjectTimeStr);
+		tft.setCursor(TFT_WIDTH/3+TFT_WIDTH/2+20, 50*(i-1 - (4)*(alarmPageNum-1)));
+		tft.setTextColor(ILI9341_WHITE);
+		tft.println("X");
 		//Serial.println();
 	}
+
 
 
 
@@ -231,7 +367,7 @@ void drawButton(){
 	tft.setTextSize(5);
 	tft.setTextColor(ILI9341_WHITE, ILI9341_RED);
 	tft.setCursor(0, 200);
-	tft.println("X");
+	tft.println("R");
 }
 
 void clearEEPROM(){
@@ -241,27 +377,59 @@ void clearEEPROM(){
 	checkAlarmCond();
 }
 
-void changeAlarmState(int alarmNum){
+void changeAlarmState(int alarmNum, int alarmNumOrg){
 	Alarm alarm;
-	EEPROM.get((alarmNum-1)*sizeof(alarm)+sizeof(int), alarm);
+	Serial.println("alarm org");
+	Serial.println(alarmNumOrg);
+	EEPROM.get((alarmNumOrg-1)*sizeof(alarm)+sizeof(int), alarm);
 	alarm.state = !alarm.state;
-	saveAlarm((alarmNum-1)*sizeof(alarm)+sizeof(int), alarm);
+	saveAlarm((alarmNumOrg-1)*sizeof(alarm)+sizeof(int), alarm);
 	if (alarm.state){
-		tft.fillRect(TFT_WIDTH/2, 50*(alarmNum-1), TFT_WIDTH/2, 35, GREEN);
+		tft.fillRect(TFT_WIDTH/2, 50*(alarmNum-1-(4)*(alarmPageNum-1)), TFT_WIDTH/3, 35, GREEN);
 	}
 	else{
-		tft.fillRect(TFT_WIDTH/2, 50*(alarmNum-1), TFT_WIDTH/2, 35, ILI9341_RED);
+		tft.fillRect(TFT_WIDTH/2, 50*(alarmNum-1-(4)*(alarmPageNum-1)), TFT_WIDTH/3, 35, ILI9341_RED);
 	}
 	checkAlarmCond();
-	delay(1000);
+	delay(200);
 }
 
 void moveAlarmsDown(){
+	if (numOfAlarms > (alarmPageNum)*4){
+		alarmPageNum++;
+		viewAlarmsList();
+		delay(200);
+	}
+}
 
+void moveAlarmsUp(){
+	if (alarmPageNum != 1){
+		alarmPageNum--;
+		viewAlarmsList();
+		delay(500);
+	}
 }
 
 void changeAlarmTime(){
 
+}
+
+void deleteAlarm(int alarmNum){
+	numOfAlarms = EEPROM.read(0);
+		if (numOfAlarms != 0){
+		int counter = 0;
+		for (int i=1; i<=numOfAlarms; i++){
+			Alarm alarm;
+			EEPROM.get((i-1)*sizeof(alarm)+sizeof(int), alarm);
+			if (i != alarmNum){
+				Serial.println("over written!");
+				saveAlarm((counter)*sizeof(alarm)+sizeof(int), alarm);
+				counter++;
+			}
+		}
+		EEPROM.put(0, numOfAlarms-1);
+		viewAlarmsList();
+	}
 }
 
 void buttonClick(){
@@ -389,17 +557,28 @@ void buttonClick(){
 					reloadMainScreen();
 				}
 			}
-			if (touchX >= TFT_WIDTH/2 && touchX <= TFT_WIDTH){
-				for (int i=1; i<numOfAlarms+1; i++){
-					if ((touchY >= 50*(i-1)) && (touchY <= 50*(i-1)+35)){
-						Serial.println(i);
-						changeAlarmState(i);
+			if (touchX >= TFT_WIDTH/2 && touchX <= TFT_WIDTH/2+TFT_WIDTH/3){
+				for (int i=((alarmPageNum-1)*4)+1; i<=4*(alarmPageNum); i++){
+					if (i-1 < numOfAlarms){
+						if ((touchY >= 50*((i-1-(4)*(alarmPageNum-1)))) && (touchY <= 50*((i-1-(4)*(alarmPageNum-1)))+35)){
+							changeAlarmState(i, alarmArrayGlobal[i-1].origIdx);
+						}
 					}
 				}
 			}
-			if (touchX >= TFT_WIDTH/2-17 && touchX <= TFT_WIDTH/2+17){
-				if (touchY >= TFT_HEIGHT-35 && touchY <= TFT_HEIGHT){
+			if (touchX >= TFT_WIDTH/2+TFT_WIDTH/3 && touchX <= TFT_WIDTH){
+				for (int i=((alarmPageNum-1)*4)+1; i<=4*(alarmPageNum); i++){
+					if ((touchY >= 50*((i-1-(4)*(alarmPageNum-1)))) && (touchY <= 50*((i-1-(4)*(alarmPageNum-1)))+35)){
+						deleteAlarm(alarmArrayGlobal[i-1].origIdx);
+					}
+				}
+			}
+			if (touchY >= TFT_HEIGHT-35 && touchY <= TFT_HEIGHT){
+				if (touchX >= TFT_WIDTH/2 && touchX <= TFT_WIDTH/2+34){
 					moveAlarmsDown();
+				}
+				if (touchX >= TFT_WIDTH/2-40 && touchX <= TFT_WIDTH/2-23){
+					moveAlarmsUp();
 				}
 			}
 		}
@@ -477,8 +656,25 @@ void soundTheTone(){
 	digitalWrite(BUZZER, HIGH);
 }
 */
+
+void launchAlarmPopUp(){
+	screenState = 3;
+	tft.fillScreen(ILI9341_BLACK);
+
+	tft.setTextSize(7);
+	tft.setTextColor(ILI9341_WHITE);
+	tft.setCursor(0, TFT_HEIGHT/4);
+	tft.println("WAKE UP");
+
+	tft.setTextSize(4);
+	tft.setTextColor(ILI9341_BLACK);
+	tft.setCursor(TFT_WIDTH/2 - BUTTON_WIDTH/2, TFT_HEIGHT - BUTTON_HEIGHT - 18);
+	tft.println("Turn Alarm Off");
+}
+
 void alarmGoOff(){
 	uint8_t randomNumber;
+	launchAlarmPopUp();
 	for (int i = 0; i < 4; i++){
 		// gets a "unique random" number between 0-3 and then adds it to the pattern
 		randomNumber = random(0, 4);
@@ -491,6 +687,7 @@ void alarmGoOff(){
 		digitalWrite(BUZZER, LOW);
 		delayMicroseconds(100);
 	}
+
 }
 void solveThePattern(){
 	// leave buzzer on
@@ -603,6 +800,7 @@ void advanceClock(){
 		EEPROM.get((i-1)*sizeof(alarm)+sizeof(int), alarm);
 		//tft.fillRect(0, 50*(i-1), TFT_WIDTH, 35, ILI9341_BLACK);
 		if (hoursDig1 == alarm.h1 && hoursDig2 == alarm.h2 && minDig1 == alarm.m1 && minDig2 == alarm.m2 && alarm.state){
+			launchAlarmPopUp();
 			while (!snooze){
 				digitalWrite(ALARM_FLASH, HIGH);
 				digitalWrite(BUZZER, HIGH);
@@ -661,14 +859,14 @@ int main(){
 	// 	Serial.println(alarm.alarmTime[i]);
 	// }
 
-	while (!read){
+	/*while (!read){
 		if (digitalRead(RESET_TIME_PIN)==LOW){
 			downloadTimeFromComputer();
 			read = 1;
 			//Serial.print("BYE");
 		}
 		//Serial.print("HI");
-	}
+	}*/
 
 
 
