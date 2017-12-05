@@ -8,8 +8,8 @@
 int time[6] = {0};
 int alarmTime[4] = {0};
 // i and read are used to make sure we read all 6 digits of time.
-const int patternLED[4] = {22, 24, 26, 28};
-const int patternPins[4] = {23, 25, 27, 29};
+const int patternPins[4] = {22, 24, 26, 28};
+const int patternLED[4] = {23, 25, 27, 29};
 int serialReadCounter = 0;
 bool read = 0, colonState = 0, makeAlarm = 0, newAlarmCreated = 0, alarmsOn = 0;
 bool patternSolved = 0;
@@ -20,7 +20,11 @@ int screenState = 0;
 int numOfAlarms = 0;
 int alarmPageNum = 1;
 int snooze = 0;
+<<<<<<< HEAD
 Alarm alarmArrayGlobal[100];
+=======
+const int analogPin = 1;
+>>>>>>> 0eeb46a09927fc5cad0a518c2b7064bb3fcebbcf
 #define ALARM_ON 44
 #define RESET_TIME_PIN 11
 #define BUZZER 12
@@ -71,6 +75,7 @@ void setup(){
 	digitalWrite(RESET_TIME_PIN, HIGH);
 	pinMode(ALARM_ON, INPUT);
 	digitalWrite(ALARM_ON, HIGH);
+	pinMode(analogPin, INPUT);
 	for (int i = 0; i < 4; i++){
 		pinMode(patternPins[i], INPUT);
 		digitalWrite(patternPins[i], HIGH);
@@ -657,6 +662,7 @@ void soundTheTone(){
 }
 */
 
+<<<<<<< HEAD
 void launchAlarmPopUp(){
 	screenState = 3;
 	tft.fillScreen(ILI9341_BLACK);
@@ -680,12 +686,20 @@ void alarmGoOff(){
 		randomNumber = random(0, 4);
 		patternToSolve[i] = randomNumber;
 		digitalWrite(patternLED[i], HIGH);
+=======
+void solveThePattern(){
+	delay(2000);
+	int buttonsReceived[4], j = 0;
+	bool correct = 1;
+	// enum patternStates {waiting, gettingPattern1, gettingPattern2, gettingPattern3, patternCorrect};
+	// patternStates currentState = waiting;
+	while (true){
+>>>>>>> 0eeb46a09927fc5cad0a518c2b7064bb3fcebbcf
 		digitalWrite(BUZZER, HIGH);
-		delay(100);
-		digitalWrite(patternLED[i], LOW);
 		delayMicroseconds(100);
 		digitalWrite(BUZZER, LOW);
 		delayMicroseconds(100);
+<<<<<<< HEAD
 	}
 
 }
@@ -696,47 +710,61 @@ void solveThePattern(){
 	while (true){
 		if (currentState == waiting){
 			if (digitalRead(patternPins[patternToSolve[0]]) == LOW){currentState = gettingPattern1;}
+=======
+		if(digitalRead(patternPins[0]) == LOW){
+			while(digitalRead(patternPins[0]) == LOW){delay(10);}
+			buttonsReceived[j] = 0;
+			j++;
+>>>>>>> 0eeb46a09927fc5cad0a518c2b7064bb3fcebbcf
 		}
-		else if (currentState == gettingPattern1){
-			// user started interacting, start getting the pattern
-			if(digitalRead(patternPins[patternToSolve[1]]) == LOW){currentState = gettingPattern2;}
-			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
-						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-							currentState = gettingPattern1;
-						}
-			else{currentState = waiting;}
+		else if(digitalRead(patternPins[1]) == LOW){
+			while(digitalRead(patternPins[1]) == LOW){delay(10);}
+			buttonsReceived[j] = 1;
+			j++;
 		}
-		else if (currentState == gettingPattern2){
-			// user started interacting, start getting the pattern
-			if(digitalRead(patternPins[patternToSolve[2]]) == LOW){currentState = gettingPattern3;}
-			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
-						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-							currentState = gettingPattern1;
-						}
-			else{currentState = waiting;}
+		else if(digitalRead(patternPins[2]) == LOW){
+			while(digitalRead(patternPins[2]) == LOW){delay(10);}
+			buttonsReceived[j] = 2;
+			j++;
 		}
-		else if (currentState == gettingPattern3){
-			// user started interacting, start getting the pattern
-			if(digitalRead(patternPins[patternToSolve[3]]) == LOW){currentState = patternCorrect;}
-			else if (digitalRead(patternPins[0]) == HIGH && digitalRead(patternPins[1]) == HIGH
-						&&digitalRead(patternPins[2]) == HIGH && digitalRead(patternPins[3]) == HIGH){
-							currentState = gettingPattern1;
-						}
-			else{currentState = waiting;}
+		else if(digitalRead(patternPins[3]) == LOW){
+			while(digitalRead(patternPins[3]) == LOW){delay(10);}
+			buttonsReceived[j] = 3;
+			j++;
 		}
-		else if (currentState == patternCorrect){
-			Serial.println("Pattern solved!");
-			break;
-			// turn buzzer off
+		if (j >= 4){
+			for (int i = 0; i < 4; i++){
+				if (buttonsReceived[i] != patternToSolve[i]){
+					correct = 0;
+				}
+			}
+			if (correct){
+				break;}
+			else {
+				j = 0;
+				buttonsReceived[0] = 0;
+				buttonsReceived[1] = 0;
+				buttonsReceived[2] = 0;
+				buttonsReceived[3] = 0;
+			}
 		}
 	}
-	// while(digitalRead(patternPins[patternToSolve[0]]) == HIGH){}
-	// while(digitalRead(patternPins[patternToSolve[1]]) == HIGH){}
-	// while(digitalRead(patternPins[patternToSolve[2]]) == HIGH){}
-	// while(digitalRead(patternPins[patternToSolve[3]]) == HIGH){}
-
-
 }
+
+void alarmGoOff(){
+	uint8_t randomNumber;
+	for (int i = 0; i < 4; i++){
+		// gets a "random" number between 0-3 and then adds it to the pattern
+		randomNumber = (analogRead(analogPin) % 4);
+		patternToSolve[i] = randomNumber;
+		Serial.println(patternToSolve[i]);
+		digitalWrite(patternLED[patternToSolve[i]], HIGH);
+		delay(2000);
+		digitalWrite(patternLED[patternToSolve[i]], LOW);
+	}
+	solveThePattern();
+}
+
 void advanceClock(){
 	minDig2++;
 	if (minDig2==10){
@@ -802,16 +830,16 @@ void advanceClock(){
 		if (hoursDig1 == alarm.h1 && hoursDig2 == alarm.h2 && minDig1 == alarm.m1 && minDig2 == alarm.m2 && alarm.state){
 			launchAlarmPopUp();
 			while (!snooze){
+				Serial.println("alarm on");
+				alarmGoOff();
 				digitalWrite(ALARM_FLASH, HIGH);
-				digitalWrite(BUZZER, HIGH);
-				delay(100);
+				// digitalWrite(BUZZER, HIGH);
+				// delay(100);
 				digitalWrite(ALARM_FLASH, LOW);
-				digitalWrite(BUZZER, LOW);
-				delay(100);
+				// digitalWrite(BUZZER, LOW);
+				// delay(100);
 			}
 		}
-
-
 	}
 }
 
@@ -863,13 +891,16 @@ int main(){
 		if (digitalRead(RESET_TIME_PIN)==LOW){
 			downloadTimeFromComputer();
 			read = 1;
-			//Serial.print("BYE");
 		}
+<<<<<<< HEAD
 		//Serial.print("HI");
 	}*/
 
 
 
+=======
+	}
+>>>>>>> 0eeb46a09927fc5cad0a518c2b7064bb3fcebbcf
 	while (true){
 		if (millis()%60000 == 0){
 			advanceClock();
@@ -883,8 +914,6 @@ int main(){
 		// if(EEPROM.read(0) != 0){
 		// 	Serial.println("alarm");
 		// }
-
-
 	}
 
 	Serial.end();
