@@ -602,7 +602,6 @@ void launchAlarmPopUp(){
 
 void alarmGoOff(){
 	uint8_t randomNumber;
-  launchAlarmPopUp();
 	for (int i = 0; i < 4; i++){
 		// gets a "random" number between 0-3 and then adds it to the pattern
 		randomNumber = (analogRead(analogPin) % 4);
@@ -677,7 +676,9 @@ void solveThePattern(){
 				break; }					     // break the pattern if the user gets it
 			else if(!correct) {                   // reset the pattern if the user doesn't
 				alarmGoOff();
+				break;
 			}
+			break;
 		}
 	}
 }
