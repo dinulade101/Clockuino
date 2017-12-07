@@ -40,8 +40,6 @@ int snooze = 0;
 // initialize array to store alarms
 Alarm alarmArrayGlobal[100];
 
-// #define ALARM_ON 44
-
 // define digital pin numbers for alarm
 #define RESET_TIME_PIN 11   // pin that you press to receive time
 #define BUZZER 12           // the buzzer
@@ -629,12 +627,16 @@ void solveThePattern(){
   bool correct = 1;
 	while (true){
     // flash LED
+    //
+    // digitalWrite(ALARM_FLASH, HIGH);
+    // digitalWrite(ALARM_FLASH, LOW);
     // keep buzzer on till user gets the pattern right
 
 		delayMicroseconds(100);
 		digitalWrite(BUZZER, LOW);
 		delayMicroseconds(100);
 		digitalWrite(BUZZER, HIGH);
+
     /*
       Record the buttons that the user presses, and fill the array
       buttonsReceived with them, to later compare if the user solved the pattern
