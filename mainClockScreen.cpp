@@ -195,6 +195,10 @@ void saveAlarmMainScreen(){
 	saveNextAlarmAddress(nextAlarmAddress+1);
 
 	reloadMainScreen();
+	alarmTime[0] = 0;
+	alarmTime[1] = 0;
+	alarmTime[2] = 0;
+	alarmTime[3] = 0;
 	checkAlarmCond();
 }
 
@@ -265,6 +269,7 @@ void qsort(Alarm alarmsArray[], int n) {
 }
 
 void viewAlarmsList(){
+
 	// shows list of all alarms, with each page containing four alarms
   screenState = 2;
   tft.fillScreen(ILI9341_BLACK);
@@ -396,6 +401,7 @@ void deleteAlarm(int alarmNum){
 		EEPROM.put(0, numOfAlarms-1);
 		viewAlarmsList();
 	}
+	checkAlarmCond();
 }
 
 void buttonClick(){
@@ -580,6 +586,7 @@ void downloadTimeFromComputer(){
   }
 }
 
+// launches new screen to indicate that alarm is going off
 void launchAlarmPopUp(){
 	screenState = 3;
 	tft.fillScreen(ILI9341_BLACK);
@@ -602,11 +609,14 @@ void alarmGoOff(){
 		// gets a "random" number between 0-3 and then adds it to the pattern
 		randomNumber = (analogRead(analogPin) % 4);
 		patternToSolve[i] = randomNumber;
+		digitalWrite(patternLED[patternToSolve[i]], LOW);
+		delay(1000);
 		digitalWrite(patternLED[patternToSolve[i]], HIGH);
-		delay(2000);
+		delay(1000);
 		digitalWrite(patternLED[patternToSolve[i]], LOW);
 	}
 	solveThePattern();
+  reloadMainScreen();
 }
 
 void solveThePattern(){
@@ -618,12 +628,13 @@ void solveThePattern(){
   // boolean value to see if user solved pattern
   bool correct = 1;
 	while (true){
+    // flash LED
     // keep buzzer on till user gets the pattern right
-    digitalWrite(BUZZER, HIGH);
+
 		delayMicroseconds(100);
 		digitalWrite(BUZZER, LOW);
 		delayMicroseconds(100);
-
+		digitalWrite(BUZZER, HIGH);
     /*
       Record the buttons that the user presses, and fill the array
       buttonsReceived with them, to later compare if the user solved the pattern
@@ -659,7 +670,7 @@ void solveThePattern(){
 				}
 			}
 
-			if (correct){break;}     // break the pattern if the user gets it
+			if(correct){break;}     // break the pattern if the user gets it
 			else {                   // reset the pattern if the user doesn't
 				alarmGoOff();
 			}
@@ -718,11 +729,7 @@ void advanceClock(){
     if (hoursDig1 == alarm.h1 && hoursDig2 == alarm.h2 && minDig1 == alarm.m1
         && minDig2 == alarm.m2 && alarm.state){
       launchAlarmPopUp();
-      while (!snooze){
-        alarmGoOff();
-        digitalWrite(ALARM_FLASH, HIGH);
-        digitalWrite(ALARM_FLASH, LOW);
-      }
+      alarmGoOff();
     }
   }
 }
@@ -772,5 +779,4 @@ int main(){
 
   Serial.end();
   return 0;
-}
 }
