@@ -614,14 +614,14 @@ void alarmGoOff(){
 		digitalWrite(patternLED[patternToSolve[i]], LOW);
 	}
 	solveThePattern();
-  reloadMainScreen();
+
 }
 
 void solveThePattern(){
-  delay(2000);
+  delay(1000);
   // initialize an array that records the buttons that user clicked so far
   // j is a counter that tells us how many buttons were pressed so far.
-  int buttonsReceived[4], j = 0;
+  int buttonsReceived[4] = {0}, j = 0;
 
   // boolean value to see if user solved pattern
   bool correct = 1;
@@ -672,8 +672,10 @@ void solveThePattern(){
 				}
 			}
 
-			if(correct){break;}     // break the pattern if the user gets it
-			else {                   // reset the pattern if the user doesn't
+			if(correct){
+				reloadMainScreen();
+				break; }					     // break the pattern if the user gets it
+			else if(!correct) {                   // reset the pattern if the user doesn't
 				alarmGoOff();
 			}
 		}
