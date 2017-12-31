@@ -1,1 +1,69 @@
-# Clockuino
+Accessories:
+* Arduino Mega Board (AMG)
+* Adafruit ILI9341 Display
+* 5 push buttons (included with Arduino class kit)
+* 5 LEDs (any color works fine)
+* Buzzer (included with Arduino class kit)
+
+Wiring instructions for Display:
+(Display Connections on Left and Arduino Connections on Right)
+* GND<-->GND
+* Vin<-->5V
+* CLK<-->52
+* MISO<-->50
+* MOSI<-->51
+* CS<-->10
+* D/C<-->9
+* Y+<-->A2 (analog pin)
+* X+<-->4  (digital pin)
+* Y-<-->5  (digital pin)
+* X-<-->A3 (analog pin)
+* CCS<-->6
+
+Wiring instructions for Connecting LEDs and push buttons:
+(Joystick Connections on Left and Arduino Connections on Right)
+* 11 (digital pin) <--> RESET_BUTTON<-->GND (board bus)
+* 12 (digital pin) <--> BUZZER <--> GND (board bus)
+* 8 (digital pin) <--> alarmLED <--> GND (board bus)
+* Arduino (Digital) Pin 23 <--> Resistor <--> Longer LED 23 lead |LED 23 | LED 23 lead <---> Arduino GND
+* Arduino (Digital) Pin 25 <--> Resistor <--> Longer LED 25 lead | LED 25 | Shorter LED 25 lead <---> Arduino GND
+* Arduino (Digital) Pin 27 <--> Resistor <--> Longer LED 27 lead | LED 27 | Shorter LED 27 lead <---> Arduino GND
+* Arduino (Digital) Pin 29 <--> Resistor <--> Longer LED 29 lead | LED 29 | Shorter LED 29 lead <---> Arduino GND
+* 22 (digital pin) <--> patternPin[0] <-->GND (board bus)
+* 24 (digital pin) <--> patternPin[1] <-->GND (board bus)
+* 26 (digital pin) <--> patternPin[2] <-->GND (board bus)
+* 28 (digital pin) <--> patternPin[3] <-->GND (board bus)
+
+Code format:
+The file alarm.h and alarm.cpp contain some helper functions, while the file mainClockScreen.cpp is the main program. Inside the subdirectory clockuino_desktop, there’s another file with its own custom Makefile, called sendTime.cpp, which is a desktop program that will be used to send time to the Arduino.
+
+Instructions for running code:
+* Complete proper wiring as indicated above.
+* Change directory in Terminal to directory containing mainClockScreen.cpp using CD command
+* Plug in Arduino into USB port
+* Use the command 'make upload && serial-mon' in Terminal to compile and upload mainClockScreen.cpp to Arduino
+* Make sure the file EEPROM.h is in the directory
+
+Steps for running program successfully:
+* Once program uploads, the arduino display should show homescreen with 4 digits. To update Arduino with local time, ensure that Arduino is connected to port 0 (ACM0) of computer. Otherwise, segmentation fault will occur from the desktop application. MAKE SURE SERIAL-MON IS OPEN on this terminal, otherwise the Arduino won’t receive the time.
+* Open new instance of terminal (while leaving the first window with serial-mon open) and run ‘cd clockuino_dekstop’ to change directory to desktop application (sendTime)
+* Run ‘make’ to compile the executable called sendTime
+* Run ‘./sendTime’ to send time to Arduino
+* If Arduino program restarts when ./sendTime is executed, ensure that serial-mon for ACM0 is open in another instance of terminal.
+* Press RESET_BUTTON push button to receive the time on the Arduino
+* Digits on home screen should now display current local time in 24-hour time format
+* Press create alarm to set new alarm
+* Tap or hold the arrow buttons to set a specific alarm time. Tap ‘Save Alarm’ to set alarm and return to home screen.
+* alarmLED should now turn on to indicate that alarm is on.
+* On any screen besides home screen, press Red X button to return to previous screen without setting alarm.
+* On the homescreen, press Red R button to clear EEPROM and delete all alarms saved on memory at once. It will take approximately 30 seconds for EEPROM to clear. During this time, the Arduino will be frozen.
+* Press ‘View Alarms’ button on homescreen to view list of all saved alarms. Use arrow buttons on bottom to scroll through list of alarms. Press X beside a specific alarm to delete it.
+* Tap red/green rectangle beside an alarm to turn it on/off. If the rectangle is green, that means the alarm is on. Tapping the green rectangle will turn alarm off. If the rectangle is colored red, that alarm is off. Pressing the red rectangle will turn alarm on.
+* If at least one alarm is on, the alarmLED should be lit. If no alarms are on (all colored rectangles are red or no alarms are saved), the alarmLED should be off.
+* When alarm goes off, a screen showing ‘Wake Up’ should be presented with the buzzer sounding at the same time.
+* At this time, the leds with pin numbers (23, 25, 27, 29) should light in a random pattern (randomized by reading from analog). The corresponding push buttons must be pressed in same order as the order in which the LEDs lit up. If the buttons are not pressed in the correct order, a new pattern will be presented, and the user has to enter the correct pattern.
+* Once the buttons are pressed in the correct order, the buzzer will stop sounding and Arduino will return to main screen.
+
+References and libraries used:
+EEPROM:
+https://github.com/arduino/Arduino/blob/master/hardware/arduino/avr/libraries/EEPROM/src/EEPROM.h
